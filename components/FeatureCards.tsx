@@ -21,14 +21,17 @@ const features = [
 
 export default function FeatureCards() {
   return (
-    <section id="features" className="px-8 pt-6 pb-16 bg-gray-50 scroll-mt-20">
+    <section id="features" className="px-8 pt-10 pb-16 bg-gray-50 scroll-mt-20">
       <div className="max-w-5xl mx-auto">
         <p className="text-xs font-semibold tracking-widest uppercase text-amber-600 text-center mb-3">
           Why teams choose Meridian
         </p>
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-          Everything you need, nothing you don&apos;t
+        <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-3">
+          Set up in 4 minutes. Insights on day one.
         </h2>
+        <p className="text-base text-gray-600 text-center max-w-2xl mx-auto mb-10">
+          Connect your data, ship dashboards your team actually opens, and get alerted before customers notice problems.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {features.map((f) => (
             <div

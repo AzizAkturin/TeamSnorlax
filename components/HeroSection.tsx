@@ -40,14 +40,14 @@ export default function HeroSection() {
         </Link>
         <Link
           href="#features"
-          className="text-sm text-gray-500 hover:text-gray-900 hover:underline underline-offset-4 rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 transition-colors"
+          className="inline-flex items-center justify-center gap-2 border border-gray-300 bg-white text-gray-800 px-7 py-3.5 rounded-lg text-base font-semibold shadow-sm hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:bg-gray-100 active:translate-y-px active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500 transition-all"
           data-ph-id="hero-see-features"
         >
-          See features <span aria-hidden>↓</span>
+          See how it works <span aria-hidden>↓</span>
         </Link>
       </div>
-      <p className="mt-3 text-xs text-gray-400">
-        14-day free trial · No credit card required
+      <p className="mt-3 text-sm text-gray-600">
+        14-day free trial · No credit card required · Cancel anytime
       </p>
     </section>
   );
