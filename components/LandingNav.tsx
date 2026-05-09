@@ -1,10 +1,11 @@
 'use client';
 
 import Link from "next/link";
+import CtaPendingHint from "./CtaPendingHint";
 
 export default function LandingNav() {
   return (
-    <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+    <nav className="sticky top-0 z-40 flex items-center justify-between px-8 py-3 border-b border-gray-100 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       <Link
         href="/"
         className="text-xl font-bold tracking-tight text-gray-900 rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
@@ -33,11 +34,12 @@ export default function LandingNav() {
         </Link>
         <Link
           href="/signup"
-          className="text-sm bg-amber-500 text-white px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-px active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 transition-all"
+          className="inline-flex items-center gap-1.5 text-sm bg-amber-500 text-white px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-px active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 transition-all"
           data-ph-id="nav-get-started"
           aria-label="Start free trial — no credit card required"
         >
           Start free trial
+          <CtaPendingHint />
         </Link>
       </div>
     </nav>
