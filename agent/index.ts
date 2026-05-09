@@ -35,7 +35,7 @@ async function run() {
   console.log(`\n✅ Devin session started`);
   console.log(`   Watch Devin work: ${session.sessionUrl}`);
 
-  const prUrl = await enrichPR(sessionCreatedAt);
+  const prUrl = await enrichPR(sessionCreatedAt, summary);
 
   console.log(`\n✅ PR ready: ${prUrl}`);
   console.log(`   Before/after screenshots and Nia context added.`);
