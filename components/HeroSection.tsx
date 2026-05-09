@@ -39,10 +39,11 @@ export default function HeroSection() {
         </Link>
         <Link
           href="#features"
-          className="inline-flex items-center justify-center border border-gray-200 text-gray-700 px-6 py-3.5 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400 transition-all"
+          className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 px-6 py-3.5 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400 transition-all"
           data-ph-id="hero-see-features"
         >
           See features
+          <span aria-hidden className="text-gray-400">↓</span>
         </Link>
       </div>
       <p className="mt-4 text-xs text-gray-400">
