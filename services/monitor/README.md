@@ -64,31 +64,38 @@ MONITOR_MIN_RELATIVE_DELTA=0.10
 MONITOR_MIN_PRIORITY_SCORE=0.75
 ```
 
-## Tensorlake Cron
+## Tensorlake Deploy and Cron
 
-Deploy `ab_monitor.app:monitor_posthog` as the Tensorlake application endpoint, then create a schedule:
+Deploy `ab_monitor.app:monitor_posthog`, set runtime secrets, and schedule from the monitor folder. The Tensorlake `tl` CLI ships with the `tensorlake` extra:
 
-```python
-import base64
-import json
-import os
-import requests
+```bash
+export TENSORLAKE_API_KEY=...
 
-application = "ab-monitor"
-payload = {
-    "cron_expression": "0 * * * *",
-    "input_base64": base64.b64encode(json.dumps({
-        "project_id": "posthog-project-id",
-        "lookback_hours": 24
-    }).encode()).decode(),
-}
+uv sync --extra tensorlake
+uv run --extra tensorlake tl secrets set \
+  POSTHOG_PERSONAL_API_KEY=... \
+  POSTHOG_PROJECT_ID=... \
+  OPENROUTER_API_KEY=... \
+  OPENROUTER_MODEL=google/gemini-2.5-flash-lite \
+  NIA_API_KEY=...
 
-requests.post(
-    f"https://api.tensorlake.ai/applications/{application}/cron-schedules",
-    json=payload,
-    headers={"Authorization": f"Bearer {os.environ['TENSORLAKE_API_KEY']}"},
-).raise_for_status()
+uv run --extra tensorlake tl deploy src/ab_monitor/app.py
+
+uv run --extra tensorlake tl cron create \
+  --schedule '0 * * * *' \
+  --input-json '{"project_id":"...","lookback_hours":24,"seen_fingerprints":[]}' \
+  monitor_posthog
 ```
+
+Invoke directly:
+
+```bash
+curl https://api.tensorlake.ai/applications/monitor_posthog \
+  -H "Authorization: Bearer $TENSORLAKE_API_KEY" \
+  --json '{"project_id":"...","lookback_hours":24,"seen_fingerprints":[]}'
+```
+
+The function takes a single `MonitorRequest` argument, so both `--input-json` and the `--json` body share one shape.
 
 ## Environment
 
@@ -106,13 +113,13 @@ Optional integrations:
 - `NIA_COMMAND`, default `nia`
 - `REPO_ROOT`, default resolves to this repo root
 - `OPENROUTER_API_KEY` or `OPENROUTER`
-- `OPENROUTER_MODEL`, required; choose a model that supports `response_format: json_schema`
+- `OPENROUTER_MODEL`, required; choose a model that supports `response_format: json_schema`. Free `:free` providers on OpenRouter rate-limit aggressively, so a cheap paid model like `google/gemini-2.5-flash-lite` is a more reliable default for the deployed monitor.
 - `POSTHOG_EVENT_NAMES`, comma-separated event names to query, default `click,scroll,exit,hover,rage_click`
 - `POSTHOG_QUERY_LIMIT`, default `10000`
 
-If OpenRouter is absent or fails, the monitor returns `spec_failed` with the chosen deterministic opportunity and does not start the Devin handoff.
+If OpenRouter is absent or fails, the monitor returns `spec_failed` with the chosen deterministic opportunity and does not start the Devin handoff. The OpenRouter call retries up to 3 times with exponential backoff on `429` so transient upstream rate limits do not abort the run.
 
-Spec generation uses OpenRouter only. Free models can work, but schema reliability varies by provider/model.
+Spec generation uses OpenRouter only. Free models can work, but schema reliability and rate limits vary by provider.
 
 ## Synthetic PostHog Data
 
