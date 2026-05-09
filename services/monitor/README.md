@@ -2,11 +2,21 @@
 
 Tensorlake-ready monitor for finding A/B testing opportunities from PostHog analytics.
 
-The monitor deliberately separates deterministic opportunity detection from LLM planning:
+The monitor closes a continuous A/B loop on Tensorlake:
 
 ```txt
-Tensorlake cron -> PostHog -> detectors -> Nia -> LLM spec -> Devin handoff
+monitor cron (hourly)  -> PostHog -> detectors -> Nia -> LLM spec
+                       -> PostHog flag (50/50) -> Insforge experiment row
+                       -> Devin: commit variant directly to main, gated on the flag
+
+judge cron (every 15m) -> Insforge active experiments -> PostHog flag-segmented metrics
+                       -> statsmodels significance
+                       -> ship: flag -> 100%, Devin opens cleanup PR removing the gate
+                       -> kill: flag -> 0%, no PR
+                       -> wait: keep collecting
 ```
+
+Hypothesis variants land on `main` directly so PostHog can split traffic without a manual gate. The only PR a human ever sees is the cleanup PR after the judge has already declared a winner.
 
 ## Layout
 
@@ -85,6 +95,11 @@ uv run --extra tensorlake tl cron create \
   --schedule '0 * * * *' \
   --input-json '{"project_id":"...","lookback_hours":24,"seen_fingerprints":[]}' \
   monitor_posthog
+
+uv run --extra tensorlake tl cron create \
+  --schedule '*/15 * * * *' \
+  --input-json '72' \
+  judge_posthog
 ```
 
 Invoke directly:
@@ -139,7 +154,9 @@ The generator intentionally creates segment-specific checkout friction, especial
 
 ## Devin Handoff
 
-When `DEVIA_API_KEY` is configured, the monitor posts directly to the Devin sessions API after a `Spec` is generated and includes the `session.id` and `session.url` in the response. The prompt format mirrors `agent/devia.ts#createDevinSession`.
+When `DEVIA_API_KEY` is set, the monitor posts directly to the Devin sessions API after a `Spec` is generated. The prompt instructs Devin to land a single commit titled `[UX Agent] <date> — flag <key>` directly on `${GITHUB_BASE_BRANCH}` — no PR — with the variant gated on the PostHog flag whose key matches the spec id. The session id and URL come back in the monitor response.
+
+When the judge declares a winner it spawns a second Devin session that opens a `[UX Agent] Ship <flag> <date>` PR removing the flag gate. That PR is the only step a human reviews; the variant is already at 100% rollout in PostHog by the time it lands.
 
 Required for live dispatch:
 
@@ -147,7 +164,7 @@ Required for live dispatch:
 - `DEVIA_BASE_URL`, default `https://api.devin.ai/v1`
 - `GITHUB_OWNER`, `GITHUB_REPO`, `GITHUB_BASE_BRANCH`
 
-If the key is absent the monitor returns the `ready_for_devin_agent` payload as before so a TypeScript caller can invoke `createDevinSession` itself. If the key is present but the call fails, the response carries `status: devin_dispatch_failed` with the error type.
+If the key is absent the monitor returns the `ready_for_devin_agent` payload so a TypeScript caller can invoke `createDevinSession` itself. If the key is present but the call fails, the response carries `status: devin_dispatch_failed` with the error type.
 
 Install deployment extras:
 
