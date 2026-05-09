@@ -42,6 +42,33 @@ export async function updateAgentRun(id: string, update: AgentRunUpdate): Promis
   if (error) throw new Error(`InsForge update agent_run failed: ${JSON.stringify(error)}`);
 }
 
+export interface PastAgentRun {
+  id: string;
+  created_at: string;
+  sessions_analyzed: number;
+  avg_time_on_page_seconds: number;
+  top_rage_click: string | null;
+  drop_off_path: string | null;
+  drop_off_scroll_depth: number | null;
+  pr_url: string | null;
+  pr_number: number | null;
+  status: string | null;
+}
+
+export async function getPastAgentRuns(limit = 5): Promise<PastAgentRun[]> {
+  const { data, error } = await insforge.database
+    .from("agent_runs")
+    .select("id,created_at,sessions_analyzed,avg_time_on_page_seconds,top_rage_click,drop_off_path,drop_off_scroll_depth,pr_url,pr_number,status")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.warn("Could not fetch past agent runs:", error);
+    return [];
+  }
+  return (data as PastAgentRun[]) ?? [];
+}
+
 export async function insertAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
   const { error } = await insforge.database.from("analytics_events").insert([
     {

@@ -49,6 +49,29 @@ export function saveAnalyticsContext(title: string, summary: string, content: st
   );
 }
 
+export function saveHistoricalRuns(runs: Array<Record<string, unknown>>): void {
+  if (!runs.length) return;
+  const content = runs
+    .map((r) =>
+      [
+        `Date: ${r.created_at}`,
+        `Sessions: ${r.sessions_analyzed}`,
+        `Avg time on page: ${r.avg_time_on_page_seconds}s`,
+        r.top_rage_click ? `Top rage-click: ${r.top_rage_click}` : null,
+        r.drop_off_path ? `Drop-off path: ${r.drop_off_path} (${r.drop_off_scroll_depth}% scroll)` : null,
+        r.pr_url ? `PR: ${r.pr_url} (${r.status})` : null,
+      ]
+        .filter(Boolean)
+        .join(" | ")
+    )
+    .join("\n");
+
+  nia(
+    `contexts save "Past agent runs" --summary "${runs.length} previous UX agent runs" --agent ux-agent --tags history,agent-runs --memory-type episodic`,
+    content
+  );
+}
+
 export function searchContext(query: string): string {
   return nia(`contexts semantic "${query}" --workspace ux-agent`);
 }

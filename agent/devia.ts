@@ -6,7 +6,11 @@ const GITHUB_OWNER = process.env.GITHUB_OWNER!;
 const GITHUB_REPO = process.env.GITHUB_REPO!;
 const BASE_BRANCH = process.env.GITHUB_BASE_BRANCH ?? "staging";
 
-function buildSessionPrompt(summary: AnalyticsSummary, codebaseContext: string): string {
+function buildSessionPrompt(
+  summary: AnalyticsSummary,
+  codebaseContext: string,
+  historicalContext: string
+): string {
   return `You are a UX optimization agent. Analyze the following user behavior analytics and make targeted code changes to improve engagement.
 
 ## Analytics Data
@@ -17,7 +21,7 @@ function buildSessionPrompt(summary: AnalyticsSummary, codebaseContext: string):
 - Rage click elements (user frustration): ${JSON.stringify(summary.rageclickElements, null, 2)}
 - Exit paths (where users leave): ${JSON.stringify(summary.exitPaths, null, 2)}
 - Drop-off points (low scroll depth): ${JSON.stringify(summary.dropOffPoints, null, 2)}
-
+${historicalContext ? `\n## Historical Context (previous agent runs)\n\n${historicalContext}\n\nDo NOT repeat changes already made in a previous run unless the metric is still actively hurting.` : ""}
 ## Codebase Context
 
 ${codebaseContext}
@@ -46,9 +50,10 @@ export interface DevinSession {
 
 export async function createDevinSession(
   summary: AnalyticsSummary,
-  codebaseContext: string
+  codebaseContext: string,
+  historicalContext = ""
 ): Promise<DevinSession> {
-  const prompt = buildSessionPrompt(summary, codebaseContext);
+  const prompt = buildSessionPrompt(summary, codebaseContext, historicalContext);
 
   const response = await fetch(`${DEVIN_BASE_URL}/sessions`, {
     method: "POST",

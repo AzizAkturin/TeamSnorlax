@@ -1,8 +1,8 @@
 import { summarizeAnalytics } from "./analytics";
-import { buildCodebaseContext, saveAnalyticsContext } from "./nia";
+import { buildCodebaseContext, saveAnalyticsContext, saveHistoricalRuns, searchContext } from "./nia";
 import { createDevinSession } from "./devia";
 import { enrichPR } from "./pr-enricher";
-import { createAgentRun, updateAgentRun } from "./db";
+import { createAgentRun, updateAgentRun, getPastAgentRuns } from "./db";
 
 const UX_FOCUS_AREAS = [
   "button styles and call to action",
@@ -35,6 +35,10 @@ async function run() {
   });
   console.log(`\n💾 Agent run saved to InsForge (id: ${runId})`);
 
+  console.log("\n📚 Fetching InsForge history + saving to Nia...");
+  const pastRuns = await getPastAgentRuns(5);
+  saveHistoricalRuns(pastRuns as unknown as Array<Record<string, unknown>>);
+
   console.log("\n🔍 Fetching codebase context via Nia...");
   const codebaseContext = buildCodebaseContext(UX_FOCUS_AREAS);
 
@@ -44,9 +48,14 @@ async function run() {
     JSON.stringify(summary, null, 2)
   );
 
+  const historicalContext = searchContext("past UX changes analytics sessions rage clicks");
+  if (historicalContext) {
+    console.log("   ✅ Retrieved historical context from Nia");
+  }
+
   console.log("\n🤖 Creating Devin session...");
   const sessionCreatedAt = Date.now();
-  const session = await createDevinSession(summary, codebaseContext);
+  const session = await createDevinSession(summary, codebaseContext, historicalContext);
 
   await updateAgentRun(runId, {
     devin_session_id: session.sessionId,
