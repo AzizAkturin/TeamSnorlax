@@ -33,6 +33,8 @@ def make_spec(
 ) -> Spec:
     if not config.openrouter_api_key:
         raise RuntimeError("OPENROUTER_API_KEY or OPENROUTER is required for spec generation.")
+    if not config.openrouter_model:
+        raise RuntimeError("OPENROUTER_MODEL is required for spec generation.")
 
     prompt = {
         "task": "Convert a deterministic analytics opportunity into an A/B experiment spec. Do not invent metrics, cohorts, or code paths not supported by the input.",

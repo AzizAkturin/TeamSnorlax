@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from ab_monitor.monitor import analyze_events
 from ab_monitor.posthog import fetch_events
 from ab_monitor.settings import Settings

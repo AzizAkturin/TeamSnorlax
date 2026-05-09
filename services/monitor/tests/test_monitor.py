@@ -7,6 +7,7 @@ from ab_monitor.settings import Settings
 from ab_monitor.devin import devin_handoff
 from ab_monitor.detect import detect
 from ab_monitor.llm import make_spec
+from ab_monitor.posthog import fetch_events
 from ab_monitor.schema import Event, Spec, Opportunity, RiskLevel
 from ab_monitor.monitor import analyze_events, is_actionable
 from ab_monitor.seed import build_seed_events
@@ -63,7 +64,7 @@ class DetectorTests(unittest.TestCase):
             nia_api_key=None,
             repo_root="../..",
             openrouter_api_key=None,
-            openrouter_model="qwen/qwen3-next-80b-a3b-instruct:free",
+            openrouter_model=None,
             min_sample_size=100,
             min_confidence=0.0,
             min_relative_delta=0.0,
@@ -85,7 +86,7 @@ class DetectorTests(unittest.TestCase):
             nia_api_key=None,
             repo_root="../..",
             openrouter_api_key=None,
-            openrouter_model="qwen/qwen3-next-80b-a3b-instruct:free",
+            openrouter_model=None,
             min_sample_size=1,
             min_confidence=0.0,
             min_relative_delta=0.0,
@@ -115,7 +116,7 @@ class DetectorTests(unittest.TestCase):
             nia_api_key=None,
             repo_root="../..",
             openrouter_api_key=None,
-            openrouter_model="qwen/qwen3-next-80b-a3b-instruct:free",
+            openrouter_model=None,
             min_sample_size=1,
             min_confidence=0.0,
             min_relative_delta=0.0,
@@ -147,7 +148,7 @@ class DetectorTests(unittest.TestCase):
             nia_api_key=None,
             repo_root="../..",
             openrouter_api_key="test-key",
-            openrouter_model="qwen/qwen3-next-80b-a3b-instruct:free",
+            openrouter_model="test/model",
             min_sample_size=1,
             min_confidence=0.0,
             min_relative_delta=0.0,
@@ -201,6 +202,40 @@ class DetectorTests(unittest.TestCase):
         self.assertEqual(request["json"]["model"], config.openrouter_model)
         self.assertEqual(request["json"]["response_format"]["type"], "json_schema")
         self.assertEqual(request["headers"]["Authorization"], "Bearer test-key")
+
+    def test_posthog_query_uses_configured_event_names_and_limit(self) -> None:
+        config = Settings(
+            posthog_personal_api_key="test-posthog-key",
+            posthog_project_api_key=None,
+            posthog_project_id="123",
+            posthog_host="https://app.posthog.com",
+            posthog_capture_host=None,
+            nia_api_key=None,
+            repo_root="../..",
+            openrouter_api_key=None,
+            openrouter_model=None,
+            posthog_event_names="product_clicked,checkout exited",
+            posthog_query_limit=25,
+            min_sample_size=1,
+            min_confidence=0.0,
+            min_relative_delta=0.0,
+            min_priority_score=0.0,
+        )
+
+        class FakeResponse:
+            def raise_for_status(self) -> None:
+                return None
+
+            def json(self) -> dict[str, object]:
+                return {"results": [], "columns": []}
+
+        with patch("ab_monitor.posthog.httpx.post", return_value=FakeResponse()) as post:
+            events = fetch_events(config)
+
+        self.assertEqual(events, [])
+        query = post.call_args.kwargs["json"]["query"]["query"]
+        self.assertIn("'product_clicked', 'checkout exited'", query)
+        self.assertIn("LIMIT 25", query)
 
     def test_devin_handoff_matches_aziz_agent_contract(self) -> None:
         opportunity = Opportunity(

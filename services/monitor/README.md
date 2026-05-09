@@ -106,11 +106,13 @@ Optional integrations:
 - `NIA_COMMAND`, default `nia`
 - `REPO_ROOT`, default resolves to this repo root
 - `OPENROUTER_API_KEY` or `OPENROUTER`
-- `OPENROUTER_MODEL`, default `qwen/qwen3-next-80b-a3b-instruct:free`
+- `OPENROUTER_MODEL`, required; choose a model that supports `response_format: json_schema`
+- `POSTHOG_EVENT_NAMES`, comma-separated event names to query, default `click,scroll,exit,hover,rage_click`
+- `POSTHOG_QUERY_LIMIT`, default `10000`
 
 If OpenRouter is absent or fails, the monitor returns `spec_failed` with the chosen deterministic opportunity and does not start the Devin handoff.
 
-Spec generation uses OpenRouter only. Choose a model that supports `response_format: json_schema`; free models can work, but schema reliability varies by provider/model.
+Spec generation uses OpenRouter only. Free models can work, but schema reliability varies by provider/model.
 
 ## Synthetic PostHog Data
 

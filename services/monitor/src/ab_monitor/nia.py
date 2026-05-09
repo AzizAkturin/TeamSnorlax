@@ -41,7 +41,7 @@ def _queries(opportunity: Opportunity) -> list[str]:
     element = segment.get("element", "")
     return [
         f"{path} {element} {opportunity.detector}".strip(),
-        f"{path} form component validation error checkout".strip(),
+        f"{path} {element} implementation component analytics instrumentation".strip(),
         "PostHog feature flag experiment variant analytics",
     ]
 

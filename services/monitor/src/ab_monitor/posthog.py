@@ -18,6 +18,9 @@ def fetch_events(config: Settings, project_id: str | None = None, lookback_hours
         raise ValueError("PostHog project id is required.")
 
     safe_lookback_hours = max(1, int(lookback_hours))
+    event_names = _event_names(config)
+    event_filter = ", ".join(_hogql_string(event_name) for event_name in event_names)
+    query_limit = max(1, int(config.posthog_query_limit))
     query = f"""
         SELECT
             event AS type,
@@ -38,8 +41,8 @@ def fetch_events(config: Settings, project_id: str | None = None, lookback_hours
             properties['code_surface'] AS code_surface
         FROM events
         WHERE timestamp >= now() - INTERVAL {safe_lookback_hours} HOUR
-          AND event IN ('click', 'scroll', 'exit', 'hover', 'rage_click')
-        LIMIT 10000
+          AND event IN ({event_filter})
+        LIMIT {query_limit}
     """
 
     response = httpx.post(
@@ -101,3 +104,14 @@ def capture(config: Settings, events: list[dict[str, Any]]) -> int:
         )
     posthog.flush()
     return len(events)
+
+
+def _event_names(config: Settings) -> list[str]:
+    names = [name.strip() for name in config.posthog_event_names.split(",") if name.strip()]
+    if not names:
+        raise ValueError("POSTHOG_EVENT_NAMES must include at least one event name.")
+    return names
+
+
+def _hogql_string(value: str) -> str:
+    return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"

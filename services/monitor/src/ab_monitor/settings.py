@@ -36,10 +36,9 @@ class Settings(BaseSettings):
         default=None,
         validation_alias=AliasChoices("OPENROUTER_API_KEY", "OPENROUTER"),
     )
-    openrouter_model: str = Field(
-        default="qwen/qwen3-next-80b-a3b-instruct:free",
-        validation_alias="OPENROUTER_MODEL",
-    )
+    openrouter_model: str | None = Field(default=None, validation_alias="OPENROUTER_MODEL")
+    posthog_event_names: str = Field(default="click,scroll,exit,hover,rage_click", validation_alias="POSTHOG_EVENT_NAMES")
+    posthog_query_limit: int = Field(default=10000, validation_alias="POSTHOG_QUERY_LIMIT")
     min_sample_size: int = Field(default=5, validation_alias="MONITOR_MIN_SAMPLE_SIZE")
     min_confidence: float = Field(default=0.30, validation_alias="MONITOR_MIN_CONFIDENCE")
     min_relative_delta: float = Field(default=0.10, validation_alias="MONITOR_MIN_RELATIVE_DELTA")
