@@ -8,7 +8,8 @@ from ab_monitor.posthog import capture
 from ab_monitor.settings import Settings
 
 PATHS = ["/", "/pricing", "/signup", "/dashboard", "/checkout/address", "/checkout/payment"]
-COUNTRIES = ["US", "CA", "GB", "DE", "IN", "BR"]
+COUNTRIES = ["US", "CA", "GB", "DE", "IN", "BR", "FR", "JP", "AU", "MX", "NL", "SG"]
+LIVE_FLAG_KEYS = ["exp_d35934b2debc", "exp_05a867f28195"]
 ELEMENTS = {
     "/": ["hero-cta", "learn-link", "nav-pricing", "demo-button"],
     "/pricing": ["starter-plan", "team-plan", "enterprise-contact", "faq-toggle"],
@@ -19,7 +20,7 @@ ELEMENTS = {
 }
 
 
-def build_seed_events(session_count: int = 750, *, seed: int = 42) -> list[dict[str, Any]]:
+def build_seed_events(session_count: int = 6000, *, seed: int = 42) -> list[dict[str, Any]]:
     rng = random.Random(seed)
     now = datetime.now(UTC)
     events: list[dict[str, Any]] = []
@@ -32,6 +33,12 @@ def build_seed_events(session_count: int = 750, *, seed: int = 42) -> list[dict[
         browser = _weighted(rng, {"Chrome": 0.55, "Safari": 0.28, "Firefox": 0.10, "Edge": 0.07})
         high_friction = device == "mobile" and browser == "Safari"
         variant = _weighted(rng, {"control": 0.50, "address_assist": 0.50})
+        flag_assignments = {
+            flag_key: rng.random() < 0.50 for flag_key in LIVE_FLAG_KEYS
+        }
+        flag_properties = {
+            f"$feature/{flag_key}": value for flag_key, value in flag_assignments.items()
+        }
         common_user = {
             "device": device,
             "browser": browser,
@@ -42,6 +49,7 @@ def build_seed_events(session_count: int = 750, *, seed: int = 42) -> list[dict[
             "utm_source": _weighted(rng, {"organic": 0.44, "paid-search": 0.22, "social": 0.18, "referral": 0.16}),
             "account_age_days": rng.randint(0, 180),
             "company_size": _weighted(rng, {"1-10": 0.35, "11-50": 0.28, "51-250": 0.24, "251+": 0.13}),
+            **flag_properties,
         }
 
         path_sequence = _path_sequence(rng, high_friction)
@@ -69,8 +77,10 @@ def build_seed_events(session_count: int = 750, *, seed: int = 42) -> list[dict[
                     "copy_variant": variant,
                 }))
 
-            if _rage_click(rng, path, high_friction, variant):
+            if _rage_click(rng, path, high_friction, variant, flag_assignments):
                 rage_element = "address-field" if path == "/checkout/address" else rng.choice(ELEMENTS[path])
+                if path == "/signup":
+                    rage_element = "password-input"
                 events.append(_event("rage_click", user_id, event_time + timedelta(seconds=rng.randint(8, 20)), {
                     **common,
                     "element": rage_element,
@@ -118,9 +128,21 @@ def _path_sequence(rng: random.Random, high_friction: bool) -> list[str]:
     return ["/", "/pricing", "/signup", "/checkout/address", "/checkout/payment"]
 
 
-def _rage_click(rng: random.Random, path: str, high_friction: bool, variant: str) -> bool:
+def _rage_click(
+    rng: random.Random,
+    path: str,
+    high_friction: bool,
+    variant: str,
+    flag_assignments: dict[str, bool],
+) -> bool:
     if path == "/checkout/address" and high_friction:
         return rng.random() < (0.44 if variant == "control" else 0.22)
+    if path == "/signup":
+        treatment = flag_assignments.get("exp_d35934b2debc", False)
+        return rng.random() < (0.05 if treatment else 0.18)
+    if path == "/":
+        treatment = flag_assignments.get("exp_05a867f28195", False)
+        return rng.random() < (0.03 if treatment else 0.09)
     return rng.random() < 0.04
 
 
