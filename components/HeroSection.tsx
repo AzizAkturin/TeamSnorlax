@@ -1,19 +1,20 @@
 import Link from "next/link";
+import CtaPendingHint from "./CtaPendingHint";
 
 export default function HeroSection() {
   return (
-    <section className="flex flex-col items-center text-center px-6 pt-8 pb-6 sm:pt-12 sm:pb-8">
+    <section className="flex flex-col items-center text-center px-6 pt-4 pb-4 sm:pt-8 sm:pb-6">
       <span className="text-xs font-semibold tracking-widest uppercase text-amber-600 mb-4">
         Now in public beta
       </span>
-      <h1 className="text-5xl font-bold tracking-tight text-gray-900 max-w-3xl leading-tight">
+      <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 max-w-3xl leading-tight">
         The analytics platform your team will actually use
       </h1>
-      <p className="mt-6 text-lg text-gray-500 max-w-xl">
+      <p className="mt-5 text-lg text-gray-500 max-w-xl">
         Meridian connects your data sources, surfaces insights automatically, and gets out of your way so you can make faster decisions.
       </p>
       <div
-        className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-500"
+        className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-500"
         aria-label="Customer trust signals"
       >
         <span className="flex items-center gap-1.5">
@@ -28,14 +29,14 @@ export default function HeroSection() {
           SOC 2 Type II
         </span>
       </div>
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-8 items-center">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-7 items-center">
         <Link
           href="/signup"
           className="inline-flex items-center justify-center gap-2 bg-amber-500 text-white px-7 py-3.5 rounded-lg text-base font-semibold shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-px active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 transition-all"
           data-ph-id="hero-start-free-trial"
         >
           Start free trial
-          <span aria-hidden>→</span>
+          <CtaPendingHint />
         </Link>
         <Link
           href="#features"
