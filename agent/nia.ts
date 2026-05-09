@@ -44,7 +44,7 @@ export function buildCodebaseContext(focusAreas: string[]): string {
 
 export function saveAnalyticsContext(title: string, summary: string, content: string): void {
   nia(
-    `contexts save "${title}" --summary "${summary}" --agent ux-agent --tags analytics,ux --memory-type episodic`,
+    `contexts save "${title}" --summary "${summary}" --content - --agent ux-agent --tags analytics,ux --memory-type episodic`,
     content
   );
 }
@@ -67,7 +67,7 @@ export function saveHistoricalRuns(runs: Array<Record<string, unknown>>): void {
     .join("\n");
 
   nia(
-    `contexts save "Past agent runs" --summary "${runs.length} previous UX agent runs" --agent ux-agent --tags history,agent-runs --memory-type episodic`,
+    `contexts save "Past agent runs" --summary "${runs.length} previous UX agent runs" --content - --agent ux-agent --tags history,agent-runs --memory-type episodic`,
     content
   );
 }
