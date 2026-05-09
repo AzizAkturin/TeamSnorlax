@@ -1,7 +1,13 @@
 import { Octokit } from "@octokit/rest";
+import { createClient } from "@insforge/sdk";
 import { takeScreenshot } from "./screenshot";
 import { searchCodebase } from "./nia";
 import type { AnalyticsSummary } from "./types";
+
+const insforge = createClient({
+  baseUrl: process.env.INSFORGE_URL!,
+  anonKey: process.env.INSFORGE_API_KEY!,
+});
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 const owner = process.env.GITHUB_OWNER!;
@@ -17,7 +23,7 @@ async function pollForPR(createdAfter: number, timeoutMs = 900000): Promise<numb
     });
     const pr = prs.find(
       (p) =>
-        p.head.ref.startsWith("ux-agent/") &&
+        (p.head.ref.startsWith("ux-agent/") || p.head.ref.startsWith("devin/")) &&
         new Date(p.created_at).getTime() > createdAfter
     );
     if (pr) {
@@ -49,23 +55,13 @@ async function pollForPreviewUrl(branch: string, timeoutMs = 300000): Promise<st
   return null;
 }
 
-async function uploadScreenshot(branch: string, filename: string, img: Buffer): Promise<string> {
-  const path = `screenshots/${filename}`;
-  let sha: string | undefined;
-  try {
-    const { data } = await octokit.repos.getContent({ owner, repo, path, ref: branch });
-    if (!Array.isArray(data) && data.type === "file") sha = data.sha;
-  } catch {}
-
-  await octokit.repos.createOrUpdateFileContents({
-    owner, repo, path,
-    message: `screenshots: add ${filename}`,
-    content: img.toString("base64"),
-    branch,
-    ...(sha ? { sha } : {}),
+async function uploadScreenshot(key: string, img: Buffer): Promise<string> {
+  const file = new File([img], key, { type: "image/png" });
+  const { data, error } = await insforge.storage.from("screenshots").uploadAuto(key, file, {
+    upsert: true,
   });
-
-  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+  if (error) throw new Error(`InsForge Storage upload failed: ${JSON.stringify(error)}`);
+  return `${process.env.INSFORGE_URL}/storage/object/public/screenshots/${data?.key ?? key}`;
 }
 
 function buildDescription(params: {
@@ -175,8 +171,9 @@ export async function enrichPR(
     console.log("\n⚠️  Preview URL not ready — skipping after screenshot");
   }
 
-  const beforeUrl = await uploadScreenshot(branch, "before.png", beforeImg);
-  const afterUrl = afterImg ? await uploadScreenshot(branch, "after.png", afterImg) : null;
+  const runKey = `run-${sessionCreatedAt}`;
+  const beforeUrl = await uploadScreenshot(`${runKey}/before.png`, beforeImg);
+  const afterUrl = afterImg ? await uploadScreenshot(`${runKey}/after.png`, afterImg) : null;
 
   const { data: changedFiles } = await octokit.pulls.listFiles({
     owner, repo, pull_number: prNumber,
