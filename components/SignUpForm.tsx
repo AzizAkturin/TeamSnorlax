@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { insforge } from "@/lib/insforge";
+import { FLAGS, useFeatureFlag } from "@/lib/featureFlags";
 
 type Step = "form" | "verify";
 
@@ -17,6 +18,26 @@ export default function SignUpForm() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
+
+  const passwordVariant = useFeatureFlag(FLAGS.signupPasswordInputV2);
+  const hasMinLength = password.length >= 6;
+  const hasLetterAndNumber = /[A-Za-z]/.test(password) && /\d/.test(password);
+
+  useEffect(() => {
+    if (!passwordVariant) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (typeof e.getModifierState === "function") {
+        setCapsLockOn(e.getModifierState("CapsLock"));
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKey);
+    };
+  }, [passwordVariant]);
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
@@ -158,9 +179,13 @@ export default function SignUpForm() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-11 text-sm outline-none focus:ring-2 focus:ring-amber-400 transition"
+              className={
+                passwordVariant
+                  ? "w-full border border-gray-300 rounded-lg px-4 py-3.5 pr-12 text-base outline-none focus:ring-2 focus:ring-amber-400 transition"
+                  : "w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-11 text-sm outline-none focus:ring-2 focus:ring-amber-400 transition"
+              }
               placeholder="At least 6 characters"
-              aria-describedby="password-hint"
+              aria-describedby={passwordVariant ? "password-requirements" : "password-hint"}
             />
             <button
               type="button"
@@ -185,9 +210,39 @@ export default function SignUpForm() {
               )}
             </button>
           </div>
-          <p id="password-hint" className="mt-1.5 text-xs text-gray-500">
-            Must be at least 6 characters
-          </p>
+          {passwordVariant ? (
+            <>
+              {capsLockOn && (
+                <p
+                  role="alert"
+                  className="mt-1.5 text-xs font-medium text-amber-700 flex items-center gap-1"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 2 3 14h6v8h6v-8h6z" />
+                  </svg>
+                  Caps Lock is on
+                </p>
+              )}
+              <ul
+                id="password-requirements"
+                aria-live="polite"
+                className="mt-2 space-y-1 text-xs"
+              >
+                <li className={`flex items-center gap-1.5 ${hasMinLength ? "text-emerald-600" : "text-gray-500"}`}>
+                  <span aria-hidden="true">{hasMinLength ? "✓" : "○"}</span>
+                  At least 6 characters
+                </li>
+                <li className={`flex items-center gap-1.5 ${hasLetterAndNumber ? "text-emerald-600" : "text-gray-500"}`}>
+                  <span aria-hidden="true">{hasLetterAndNumber ? "✓" : "○"}</span>
+                  Mix of letters and numbers
+                </li>
+              </ul>
+            </>
+          ) : (
+            <p id="password-hint" className="mt-1.5 text-xs text-gray-500">
+              Must be at least 6 characters
+            </p>
+          )}
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
         <button
