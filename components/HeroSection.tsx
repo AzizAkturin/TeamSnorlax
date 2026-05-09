@@ -4,7 +4,7 @@ export default function HeroSection() {
   return (
     <section className="flex flex-col items-center text-center px-6 pt-16 pb-12 sm:pt-20 sm:pb-14">
       <span className="text-xs font-semibold tracking-widest uppercase text-amber-600 mb-4">
-        Now in public beta
+        Now in public alpha
       </span>
       <h1 className="text-5xl font-bold tracking-tight text-gray-900 max-w-3xl leading-tight">
         The analytics platform your team will actually use
