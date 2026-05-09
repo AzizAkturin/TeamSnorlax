@@ -48,7 +48,9 @@ async function run() {
     JSON.stringify(summary, null, 2)
   );
 
-  const historicalContext = searchContext("past UX changes analytics sessions rage clicks");
+  const pastChanges = searchContext("UX changes files modified completed");
+  const pastAnalytics = searchContext("past agent runs analytics sessions rage clicks drop-off");
+  const historicalContext = [pastChanges, pastAnalytics].filter(Boolean).join("\n\n---\n\n");
   if (historicalContext) {
     console.log("   ✅ Retrieved historical context from Nia");
   }

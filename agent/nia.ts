@@ -72,6 +72,30 @@ export function saveHistoricalRuns(runs: Array<Record<string, unknown>>): void {
   );
 }
 
+export function saveChangesMade(
+  prUrl: string,
+  files: Array<{ filename: string; additions: number; deletions: number }>,
+  prBody: string
+): void {
+  const date = new Date().toISOString().slice(0, 10);
+  const fileList = files.map((f) => `  - ${f.filename} (+${f.additions}/-${f.deletions})`).join("\n");
+  const content = [
+    `Date: ${date}`,
+    `PR: ${prUrl}`,
+    "",
+    "Files changed:",
+    fileList,
+    "",
+    "What was done (Devin's description):",
+    prBody.slice(0, 1000),
+  ].join("\n");
+
+  nia(
+    `contexts save "UX changes ${date}" --summary "Files changed by UX agent on ${date}" --content - --agent ux-agent --tags changes,completed --memory-type episodic`,
+    content
+  );
+}
+
 export function searchContext(query: string): string {
   return nia(`contexts semantic "${query}" --workspace ux-agent`);
 }

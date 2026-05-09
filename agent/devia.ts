@@ -21,7 +21,7 @@ function buildSessionPrompt(
 - Rage click elements (user frustration): ${JSON.stringify(summary.rageclickElements, null, 2)}
 - Exit paths (where users leave): ${JSON.stringify(summary.exitPaths, null, 2)}
 - Drop-off points (low scroll depth): ${JSON.stringify(summary.dropOffPoints, null, 2)}
-${historicalContext ? `\n## Historical Context (previous agent runs)\n\n${historicalContext}\n\nDo NOT repeat changes already made in a previous run unless the metric is still actively hurting.` : ""}
+${historicalContext ? `\n## Memory: What the UX Agent Has Already Done\n\n${historicalContext}\n\n⚠️ Do NOT touch files or elements that were already changed in a previous run unless the metric is still actively hurting.\n✅ DO replicate successful patterns from previous runs to similar untouched pages or components.` : ""}
 ## Codebase Context
 
 ${codebaseContext}

@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { createClient } from "@insforge/sdk";
 import { takeScreenshot } from "./screenshot";
-import { searchCodebase, readFile } from "./nia";
+import { searchCodebase, readFile, saveChangesMade } from "./nia";
 import type { AnalyticsSummary } from "./types";
 
 const insforge = createClient({
@@ -206,5 +206,14 @@ export async function enrichPR(
   await octokit.pulls.update({ owner, repo, pull_number: prNumber, body: newBody });
 
   console.log(`✅ PR #${prNumber} description updated`);
-  return `https://github.com/${owner}/${repo}/pull/${prNumber}`;
+  const prUrl = `https://github.com/${owner}/${repo}/pull/${prNumber}`;
+
+  console.log("\n🧠 Saving changes to Nia memory...");
+  saveChangesMade(
+    prUrl,
+    changedFiles.map((f) => ({ filename: f.filename, additions: f.additions, deletions: f.deletions })),
+    pr.body ?? ""
+  );
+
+  return prUrl;
 }
