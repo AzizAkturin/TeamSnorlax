@@ -73,7 +73,7 @@ def analyze_events(
             "devin": None,
         }
 
-    devin_run = devin_handoff(chosen, nia_context, spec)
+    devin_run = devin_handoff(chosen, nia_context, spec, config)
 
     return {
         "status": "autoresearch_started",

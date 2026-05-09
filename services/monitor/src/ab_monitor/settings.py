@@ -37,6 +37,17 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("OPENROUTER_API_KEY", "OPENROUTER"),
     )
     openrouter_model: str | None = Field(default=None, validation_alias="OPENROUTER_MODEL")
+    devin_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("DEVIA_API_KEY", "DEVIN_API_KEY"),
+    )
+    devin_base_url: str = Field(
+        default="https://api.devin.ai/v1",
+        validation_alias=AliasChoices("DEVIA_BASE_URL", "DEVIN_BASE_URL"),
+    )
+    github_owner: str | None = Field(default=None, validation_alias="GITHUB_OWNER")
+    github_repo: str | None = Field(default=None, validation_alias="GITHUB_REPO")
+    github_base_branch: str = Field(default="main", validation_alias="GITHUB_BASE_BRANCH")
     posthog_event_names: str = Field(default="click,scroll,exit,hover,rage_click", validation_alias="POSTHOG_EVENT_NAMES")
     posthog_query_limit: int = Field(default=10000, validation_alias="POSTHOG_QUERY_LIMIT")
     min_sample_size: int = Field(default=5, validation_alias="MONITOR_MIN_SAMPLE_SIZE")

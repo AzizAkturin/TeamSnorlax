@@ -139,20 +139,15 @@ The generator intentionally creates segment-specific checkout friction, especial
 
 ## Devin Handoff
 
-The direct Devin API client lives on `origin/aziz-workbranch` in `agent/devia.ts` as:
+When `DEVIA_API_KEY` is configured, the monitor posts directly to the Devin sessions API after a `Spec` is generated and includes the `session.id` and `session.url` in the response. The prompt format mirrors `agent/devia.ts#createDevinSession`.
 
-```ts
-createDevinSession(summary: AnalyticsSummary, codebaseContext: string)
-```
+Required for live dispatch:
 
-This monitor does not duplicate that client. When a `Spec` exists, it returns a `ready_for_devin_agent` payload shaped for that function:
+- `DEVIA_API_KEY`
+- `DEVIA_BASE_URL`, default `https://api.devin.ai/v1`
+- `GITHUB_OWNER`, `GITHUB_REPO`, `GITHUB_BASE_BRANCH`
 
-```json
-{
-  "summary": {},
-  "codebaseContext": "..."
-}
-```
+If the key is absent the monitor returns the `ready_for_devin_agent` payload as before so a TypeScript caller can invoke `createDevinSession` itself. If the key is present but the call fails, the response carries `status: devin_dispatch_failed` with the error type.
 
 Install deployment extras:
 

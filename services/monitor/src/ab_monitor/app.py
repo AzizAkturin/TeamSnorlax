@@ -26,6 +26,11 @@ runtime_image = (
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "NIA_API_KEY",
+        "DEVIA_API_KEY",
+        "DEVIA_BASE_URL",
+        "GITHUB_OWNER",
+        "GITHUB_REPO",
+        "GITHUB_BASE_BRANCH",
     ],
 )
 def monitor_posthog(request: MonitorRequest = MonitorRequest()) -> "dict[str, Any]":
