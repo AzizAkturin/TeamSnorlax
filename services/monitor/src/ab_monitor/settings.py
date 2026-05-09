@@ -40,8 +40,6 @@ class Settings(BaseSettings):
         default="qwen/qwen3-next-80b-a3b-instruct:free",
         validation_alias="OPENROUTER_MODEL",
     )
-    openai_api_key: str | None = Field(default=None, validation_alias="OPENAI_API_KEY")
-    openai_model: str = Field(default="gpt-5.4", validation_alias="OPENAI_MODEL")
     min_sample_size: int = Field(default=5, validation_alias="MONITOR_MIN_SAMPLE_SIZE")
     min_confidence: float = Field(default=0.30, validation_alias="MONITOR_MIN_CONFIDENCE")
     min_relative_delta: float = Field(default=0.10, validation_alias="MONITOR_MIN_RELATIVE_DELTA")

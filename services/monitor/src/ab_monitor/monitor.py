@@ -4,7 +4,7 @@ from typing import Any
 
 from ab_monitor.devin import devin_handoff
 from ab_monitor.nia import enrich_with_nia
-from ab_monitor.llm import fallback_spec, make_spec
+from ab_monitor.llm import make_spec
 from ab_monitor.posthog import fetch_events
 from ab_monitor.settings import Settings
 from ab_monitor.detect import detect
@@ -58,28 +58,32 @@ def analyze_events(
 
     chosen = actionable[0]
     nia_context = enrich_with_nia(config, chosen)
-    spec_error = None
-    spec_source = "llm"
     try:
         spec = make_spec(config, chosen, nia_context)
     except Exception as error:
-        spec = None
-        spec_error = str(error)
-    if spec is None:
-        spec = fallback_spec(chosen, nia_context)
-        spec_source = "deterministic"
+        return {
+            "status": "spec_failed",
+            "project_id": project_id,
+            "lookback_hours": lookback_hours,
+            "event_count": len(events),
+            "chosen": chosen.to_dict(),
+            "nia_context": nia_context,
+            "spec": None,
+            "spec_error": str(error),
+            "devin": None,
+        }
+
     devin_run = devin_handoff(chosen, nia_context, spec)
 
     return {
-        "status": "autoresearch_started" if spec else "opportunity_found",
+        "status": "autoresearch_started",
         "project_id": project_id,
         "lookback_hours": lookback_hours,
         "event_count": len(events),
         "chosen": chosen.to_dict(),
         "nia_context": nia_context,
-        "spec": spec.to_dict() if spec else None,
-        "spec_source": spec_source,
-        "spec_error": spec_error,
+        "spec": spec.to_dict(),
+        "spec_error": None,
         "devin": devin_run,
     }
 
