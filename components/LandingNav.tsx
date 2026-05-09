@@ -35,8 +35,9 @@ export default function LandingNav() {
           href="/signup"
           className="text-sm bg-amber-500 text-white px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-px active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 transition-all"
           data-ph-id="nav-get-started"
+          aria-label="Start free trial — no credit card required"
         >
-          Get started
+          Start free trial
         </Link>
       </div>
     </nav>

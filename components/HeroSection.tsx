@@ -12,7 +12,23 @@ export default function HeroSection() {
       <p className="mt-6 text-lg text-gray-500 max-w-xl">
         Meridian connects your data sources, surfaces insights automatically, and gets out of your way so you can make faster decisions.
       </p>
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-10 items-center">
+      <div
+        className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-500"
+        aria-label="Customer trust signals"
+      >
+        <span className="flex items-center gap-1.5">
+          <span className="text-amber-500" aria-hidden>★★★★★</span>
+          <span>4.9 on G2 · 240+ reviews</span>
+        </span>
+        <span className="hidden sm:inline text-gray-300" aria-hidden>·</span>
+        <span>Trusted by 1,200+ data teams at Linear, Ramp, Vercel</span>
+        <span className="hidden sm:inline text-gray-300" aria-hidden>·</span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+          SOC 2 Type II
+        </span>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-8 items-center">
         <Link
           href="/signup"
           className="inline-flex items-center justify-center gap-2 bg-amber-500 text-white px-7 py-3.5 rounded-lg text-base font-semibold shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-px active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 transition-all"
