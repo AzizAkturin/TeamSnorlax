@@ -8,6 +8,7 @@ from ab_monitor.detect import detect
 from ab_monitor.schema import Event, Spec, Opportunity, RiskLevel
 from ab_monitor.monitor import analyze_events, is_actionable
 from ab_monitor.seed import build_seed_events
+from ab_monitor.stats import two_proportion_confidence
 
 
 def event(
@@ -28,6 +29,11 @@ def event(
 
 
 class DetectorTests(unittest.TestCase):
+    def test_two_proportion_confidence_uses_statsmodels(self) -> None:
+        confidence = two_proportion_confidence(20, 79, 90, 750)
+
+        self.assertGreater(confidence, 0.99)
+
     def test_rage_click_cluster_emits_stable_opportunity(self) -> None:
         events: list[Event] = []
         for index in range(40):
