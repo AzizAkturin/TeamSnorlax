@@ -97,5 +97,7 @@ export function saveChangesMade(
 }
 
 export function searchContext(query: string): string {
-  return nia(`contexts semantic "${query}" --workspace ux-agent`);
+  const result = nia(`contexts semantic "${query}" --workspace ux-agent`);
+  if (!result || result.includes("No matching contexts found") || result.includes("Total: 0")) return "";
+  return result;
 }

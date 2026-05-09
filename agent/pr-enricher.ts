@@ -36,9 +36,10 @@ async function pollForPR(createdAfter: number, timeoutMs = 900000): Promise<numb
   throw new Error("Timed out waiting for Devin to open a PR");
 }
 
-async function pollForPreviewUrl(branch: string, timeoutMs = 300000): Promise<string | null> {
+async function pollForPreviewUrl(prNumber: number, branch: string, timeoutMs = 300000): Promise<string | null> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
+    // Try GitHub Deployments API first
     const { data: deployments } = await octokit.repos.listDeployments({
       owner, repo, ref: branch, per_page: 5,
     });
@@ -49,6 +50,16 @@ async function pollForPreviewUrl(branch: string, timeoutMs = 300000): Promise<st
       const ok = statuses.find((s) => s.state === "success" && s.environment_url);
       if (ok?.environment_url) return ok.environment_url;
     }
+    // Fall back: scan PR comments for Vercel bot preview URL
+    const { data: comments } = await octokit.issues.listComments({
+      owner, repo, issue_number: prNumber, per_page: 20,
+    });
+    for (const c of comments) {
+      if (c.user?.login?.includes("vercel") && c.body) {
+        const match = c.body.match(/https:\/\/[a-z0-9-]+-[a-z0-9]+-[a-z0-9]+\.vercel\.app/);
+        if (match) return match[0];
+      }
+    }
     process.stdout.write(".");
     await new Promise((r) => setTimeout(r, 10000));
   }
@@ -57,11 +68,11 @@ async function pollForPreviewUrl(branch: string, timeoutMs = 300000): Promise<st
 
 async function uploadScreenshot(key: string, img: Buffer): Promise<string> {
   const file = new File([img], key, { type: "image/png" });
-  const { data, error } = await insforge.storage.from("screenshots").uploadAuto(key, file, {
-    upsert: true,
-  });
+  const { data, error } = await insforge.storage.from("screenshots").uploadAuto(file);
   if (error) throw new Error(`InsForge Storage upload failed: ${JSON.stringify(error)}`);
-  return `${process.env.INSFORGE_URL}/storage/object/public/screenshots/${data?.key ?? key}`;
+  const storedKey = (data as { key?: string })?.key ?? key;
+  const encodedKey = storedKey.split("/").map(encodeURIComponent).join("/");
+  return `${process.env.INSFORGE_URL}/storage/object/public/screenshots/${encodedKey}`;
 }
 
 function buildDescription(params: {
@@ -70,9 +81,10 @@ function buildDescription(params: {
   beforeUrl: string;
   afterUrl: string | null;
   niaLines: string[];
+  niaHistoricalContext: string;
   files: { filename: string; status: string; additions: number; deletions: number }[];
 }): string {
-  const { summary, devinBody, beforeUrl, afterUrl, niaLines, files } = params;
+  const { summary, devinBody, beforeUrl, afterUrl, niaLines, niaHistoricalContext, files } = params;
 
   const analyticsTable = [
     "## 📊 Analytics That Triggered This",
@@ -125,9 +137,16 @@ function buildDescription(params: {
     devinBody.trim(),
   ].join("\n");
 
-  const niaSection = niaLines.length
-    ? ["## 🔍 Codebase Context (via Nia)", "", ...niaLines].join("\n")
-    : "";
+  const niaSection = [
+    niaHistoricalContext
+      ? ["## 🧠 Nia Memory: What the Agent Already Knows", "", niaHistoricalContext].join("\n")
+      : "",
+    niaLines.length
+      ? ["## 🔍 Nia: Changed File Context", "", ...niaLines].join("\n")
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
   return [
     analyticsTable,
@@ -149,7 +168,8 @@ function buildDescription(params: {
 
 export async function enrichPR(
   sessionCreatedAt: number,
-  summary: AnalyticsSummary
+  summary: AnalyticsSummary,
+  niaHistoricalContext = ""
 ): Promise<string> {
   console.log("\n⏳ Waiting for Devin to open a PR");
   const prNumber = await pollForPR(sessionCreatedAt);
@@ -161,7 +181,7 @@ export async function enrichPR(
   const beforeImg = await takeScreenshot(PROD_URL);
 
   console.log("\n⏳ Waiting for Vercel preview");
-  const previewUrl = await pollForPreviewUrl(branch);
+  const previewUrl = await pollForPreviewUrl(prNumber, branch);
 
   let afterImg: Buffer | null = null;
   if (previewUrl) {
@@ -172,8 +192,8 @@ export async function enrichPR(
   }
 
   const runKey = `run-${sessionCreatedAt}`;
-  const beforeUrl = await uploadScreenshot(`${runKey}/before.png`, beforeImg);
-  const afterUrl = afterImg ? await uploadScreenshot(`${runKey}/after.png`, afterImg) : null;
+  const beforeUrl = await uploadScreenshot(`${runKey}--before.png`, beforeImg);
+  const afterUrl = afterImg ? await uploadScreenshot(`${runKey}--after.png`, afterImg) : null;
 
   const { data: changedFiles } = await octokit.pulls.listFiles({
     owner, repo, pull_number: prNumber,
@@ -195,6 +215,75 @@ export async function enrichPR(
     beforeUrl,
     afterUrl,
     niaLines,
+    niaHistoricalContext,
+    files: changedFiles.map((f) => ({
+      filename: f.filename,
+      status: f.status,
+      additions: f.additions,
+      deletions: f.deletions,
+    })),
+  });
+
+  await octokit.pulls.update({ owner, repo, pull_number: prNumber, body: newBody });
+
+  console.log(`✅ PR #${prNumber} description updated`);
+  const prUrl = `https://github.com/${owner}/${repo}/pull/${prNumber}`;
+
+  console.log("\n🧠 Saving changes to Nia memory...");
+  saveChangesMade(
+    prUrl,
+    changedFiles.map((f) => ({ filename: f.filename, additions: f.additions, deletions: f.deletions })),
+    pr.body ?? ""
+  );
+
+  return prUrl;
+}
+
+export async function enrichSpecificPR(
+  prNumber: number,
+  summary: AnalyticsSummary,
+  niaHistoricalContext = ""
+): Promise<string> {
+  const { data: pr } = await octokit.pulls.get({ owner, repo, pull_number: prNumber });
+  const branch = pr.head.ref;
+
+  console.log("\n📸 Taking before screenshot...");
+  const beforeImg = await takeScreenshot(PROD_URL);
+
+  console.log("\n⏳ Waiting for Vercel preview (up to 2 min)...");
+  const previewUrl = await pollForPreviewUrl(prNumber, branch, 120000);
+
+  let afterImg: Buffer | null = null;
+  if (previewUrl) {
+    console.log(`\n📸 Taking after screenshot from ${previewUrl}...`);
+    afterImg = await takeScreenshot(previewUrl);
+  } else {
+    console.log("\n⚠️  Preview URL not ready — skipping after screenshot");
+  }
+
+  const runKey = `run-pr${prNumber}`;
+  const beforeUrl = await uploadScreenshot(`${runKey}--before.png`, beforeImg);
+  const afterUrl = afterImg ? await uploadScreenshot(`${runKey}--after.png`, afterImg) : null;
+
+  const { data: changedFiles } = await octokit.pulls.listFiles({ owner, repo, pull_number: prNumber });
+
+  console.log("\n🔍 Fetching Nia context for changed files...");
+  const niaLines: string[] = [];
+  for (const file of changedFiles.slice(0, 5)) {
+    const content = readFile(file.filename);
+    const ctx = content || searchCodebase(file.filename);
+    if (ctx) {
+      niaLines.push(`- **\`${file.filename}\`** — ${ctx.slice(0, 220).replace(/\n/g, " ").trim()}`);
+    }
+  }
+
+  const newBody = buildDescription({
+    summary,
+    devinBody: pr.body ?? "",
+    beforeUrl,
+    afterUrl,
+    niaLines,
+    niaHistoricalContext,
     files: changedFiles.map((f) => ({
       filename: f.filename,
       status: f.status,
