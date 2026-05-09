@@ -1,0 +1,16 @@
+{
+  "id": "tc_discord_notification_final_pr",
+  "description": "When the final winner PR is opened for human review, a Discord message must be sent containing the PR URL — the human reviewer should not have to go looking for it",
+  "input": {
+    "final_pr_url": "https://github.com/org/repo/pull/31",
+    "winner": "variant_a",
+    "component": "HeroCTA",
+    "winning_click_rate": 0.058
+  },
+  "expected": {
+    "discord_message_sent": true,
+    "message_contains_pr_url": true,
+    "message_contains_winner": true,
+    "message_contains_metric": true
+  }
+}

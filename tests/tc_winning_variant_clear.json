@@ -1,0 +1,21 @@
+{
+  "id": "tc_winning_variant_clear",
+  "description": "When one variant has a meaningfully higher click-through rate than control and others, the agent should select it as the winner and open a final cleanup PR with only the winning variant's code",
+  "input": {
+    "component": "HeroCTA",
+    "file_path": "app/components/HeroCTA.tsx",
+    "experiment_duration_days": 7,
+    "posthog_results": {
+      "control": { "click_rate": 0.021, "sessions": 340 },
+      "variant_a": { "click_rate": 0.058, "sessions": 344 },
+      "variant_b": { "click_rate": 0.024, "sessions": 338 }
+    }
+  },
+  "expected": {
+    "winner": "variant_a",
+    "final_pr_opened": true,
+    "final_pr_contains_only_winner": true,
+    "feature_flags_disabled": true,
+    "files_changed": 1
+  }
+}

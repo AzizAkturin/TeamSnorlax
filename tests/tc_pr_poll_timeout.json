@@ -1,0 +1,14 @@
+{
+  "id": "tc_pr_poll_timeout",
+  "description": "If no matching ux-agent/* PR appears within the 15-minute polling window, the agent should throw an error rather than hang or silently succeed",
+  "input": {
+    "open_prs": [],
+    "poll_timeout_ms": 900000,
+    "elapsed_ms": 901000
+  },
+  "expected": {
+    "error_thrown": true,
+    "error_message": "Timed out waiting for Devin to open a PR",
+    "pr_url_returned": false
+  }
+}

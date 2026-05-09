@@ -1,0 +1,15 @@
+{
+  "id": "tc_preview_url_not_ready",
+  "description": "If the Vercel preview URL is not available within 5 minutes, the after screenshot is skipped and the PR description should still be updated with a placeholder message",
+  "input": {
+    "pr_number": 22,
+    "branch": "ux-agent/proposal-1700000000000",
+    "vercel_preview_url": null,
+    "before_screenshot_available": true
+  },
+  "expected": {
+    "pr_description_updated": true,
+    "after_screenshot_uploaded": false,
+    "pr_description_contains": "Vercel preview still building"
+  }
+}
