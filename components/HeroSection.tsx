@@ -3,7 +3,7 @@ import CtaPendingHint from "./CtaPendingHint";
 
 export default function HeroSection() {
   return (
-    <section className="relative flex flex-col items-center text-center px-6 pt-2 pb-8 sm:pt-3 sm:pb-10">
+    <section className="relative flex flex-col items-center text-center px-6 pt-2 pb-4 sm:pt-3 sm:pb-6">
       <span className="text-xs font-semibold tracking-widest uppercase text-amber-600 mb-3">
         Now in public beta
       </span>
@@ -32,7 +32,7 @@ export default function HeroSection() {
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-5 mt-4 items-center">
         <Link
           href="/signup"
-          className="inline-flex items-center justify-center gap-2 bg-amber-500 text-white px-7 py-3.5 rounded-lg text-base font-semibold shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-px active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 transition-all"
+          className="inline-flex items-center justify-center gap-2 bg-amber-500 text-white px-7 py-3.5 rounded-lg text-base font-semibold shadow-sm select-none hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:scale-[0.97] active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 transition-transform duration-75 motion-reduce:active:scale-100 [transition-property:transform,background-color,box-shadow]"
           data-ph-id="hero-start-free-trial"
         >
           Start free trial
@@ -49,14 +49,6 @@ export default function HeroSection() {
       <p className="mt-3 text-xs text-gray-400">
         14-day free trial · No credit card required
       </p>
-      <Link
-        href="#features"
-        aria-label="Scroll to features"
-        data-ph-id="hero-scroll-cue"
-        className="group mt-6 inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm hover:text-amber-600 hover:border-amber-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 transition-all"
-      >
-        <span aria-hidden className="animate-bounce text-lg leading-none group-hover:text-amber-600">↓</span>
-      </Link>
     </section>
   );
 }
