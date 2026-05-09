@@ -186,6 +186,8 @@ class DetectorTests(unittest.TestCase):
         """
 
         class FakeResponse:
+            status_code = 200
+
             def raise_for_status(self) -> None:
                 return None
 

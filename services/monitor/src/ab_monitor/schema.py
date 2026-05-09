@@ -12,6 +12,17 @@ class RiskLevel(StrEnum):
     HIGH = "high"
 
 
+class MonitorRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    project_id: str | None = None
+    lookback_hours: int = 24
+    seen_fingerprints: list[str] = Field(default_factory=list)
+
+
+MonitorRequest.model_rebuild()
+
+
 class Event(BaseModel):
     model_config = ConfigDict(extra="allow")
 

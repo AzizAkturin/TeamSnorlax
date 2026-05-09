@@ -1,9 +1,8 @@
-from __future__ import annotations
-
 from typing import Any
 
 from ab_monitor.monitor import analyze_events
 from ab_monitor.posthog import fetch_events
+from ab_monitor.schema import MonitorRequest
 from ab_monitor.settings import Settings
 from ab_monitor.tensorlake import Image, application, function
 
@@ -29,11 +28,11 @@ runtime_image = (
         "NIA_API_KEY",
     ],
 )
-def monitor_posthog(
-    project_id: str | None = None,
-    lookback_hours: int = 24,
-    seen_fingerprints: list[str] | None = None,
-) -> dict[str, Any]:
+def monitor_posthog(request: MonitorRequest = MonitorRequest()) -> "dict[str, Any]":
+    project_id = request.project_id
+    lookback_hours = request.lookback_hours
+    seen = set(request.seen_fingerprints)
+
     try:
         config = Settings.from_env()
         events = fetch_events(config, project_id, lookback_hours)
@@ -51,7 +50,7 @@ def monitor_posthog(
             config=config,
             project_id=project_id,
             lookback_hours=lookback_hours,
-            seen_fingerprints=set(seen_fingerprints or []),
+            seen_fingerprints=seen,
         )
     except Exception as error:
         return {
