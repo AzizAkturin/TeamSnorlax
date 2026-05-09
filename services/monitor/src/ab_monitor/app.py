@@ -7,7 +7,7 @@ from ab_monitor.posthog import fetch_events
 from ab_monitor.settings import Settings
 from ab_monitor.tensorlake import Image, application, function
 
-runtime_image = Image().run("pip install /")
+runtime_image = Image().run("pip install .")
 
 
 @application()
