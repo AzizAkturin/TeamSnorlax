@@ -35,7 +35,16 @@ def monitor_posthog(
     seen_fingerprints: list[str] | None = None,
 ) -> dict[str, Any]:
     config = Settings.from_env()
-    events = fetch_events(config, project_id, lookback_hours)
+    try:
+        events = fetch_events(config, project_id, lookback_hours)
+    except Exception as error:
+        return {
+            "status": "fetch_failed",
+            "project_id": project_id,
+            "lookback_hours": lookback_hours,
+            "error_type": type(error).__name__,
+            "error": str(error),
+        }
     return analyze_events(
         events=events,
         config=config,
