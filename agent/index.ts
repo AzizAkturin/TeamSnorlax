@@ -1,6 +1,7 @@
 import { summarizeAnalytics } from "./analytics";
 import { buildCodebaseContext } from "./nia";
 import { createDevinSession } from "./devia";
+import { enrichPR } from "./pr-enricher";
 
 const UX_FOCUS_AREAS = [
   "button styles and call to action",
@@ -28,12 +29,16 @@ async function run() {
   const codebaseContext = buildCodebaseContext(UX_FOCUS_AREAS);
 
   console.log("\n🤖 Creating Devin session...");
+  const sessionCreatedAt = Date.now();
   const session = await createDevinSession(summary, codebaseContext);
 
-  console.log(`\n✅ Devin session started!`);
-  console.log(`   Session ID: ${session.sessionId}`);
+  console.log(`\n✅ Devin session started`);
   console.log(`   Watch Devin work: ${session.sessionUrl}`);
-  console.log(`\nDevin will analyze the data, make the changes, and open a PR on staging.`);
+
+  const prUrl = await enrichPR(sessionCreatedAt);
+
+  console.log(`\n✅ PR ready: ${prUrl}`);
+  console.log(`   Before/after screenshots and Nia context added.`);
 }
 
 run().catch((err) => {

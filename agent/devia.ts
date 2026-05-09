@@ -24,14 +24,19 @@ ${codebaseContext}
 
 ## Task
 
-Based on the analytics above:
-1. Identify the 2-3 highest-impact UX changes (colors, spacing, fonts, copy, layout, CTAs)
-2. Implement those changes directly in the codebase (repo: ${GITHUB_OWNER}/${GITHUB_REPO})
-3. Create a pull request targeting the \`${BASE_BRANCH}\` branch
-4. Title the PR: "[UX Agent] Proposal ${new Date().toISOString().slice(0, 10)}"
-5. In the PR description, explain each change and cite the specific analytics data that motivated it
+1. Pick the 2-3 highest-impact UX changes only (colors, spacing, fonts, copy, layout, CTAs).
+2. Implement them in the codebase (repo: ${GITHUB_OWNER}/${GITHUB_REPO}).
+3. Open a PR targeting \`${BASE_BRANCH}\` titled: "[UX Agent] Proposal ${new Date().toISOString().slice(0, 10)}"
+4. PR description must follow this format exactly — short and specific:
 
-Every change must be directly motivated by the analytics. Do not add features unrelated to the data.`;
+**What changed:**
+- [file] — [one sentence, what and why, cite the exact metric e.g. "rage click rate 40%"]
+
+Rules:
+- One bullet per file changed. No paragraphs.
+- Every bullet must reference a specific number from the analytics.
+- Do not add features unrelated to the data.
+- No filler text, no greetings, no summaries.`;
 }
 
 export interface DevinSession {
