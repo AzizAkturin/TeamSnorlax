@@ -1,0 +1,362 @@
+[
+  {
+    "type": "click",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-0",
+    "timestamp": 1778354603145,
+    "scrollDepth": 20,
+    "timeOnPage": 15
+  },
+  {
+    "type": "click",
+    "element": "docs-link",
+    "path": "/",
+    "sessionId": "sess-1",
+    "timestamp": 1778354600145,
+    "scrollDepth": 25,
+    "timeOnPage": 20
+  },
+  {
+    "type": "click",
+    "element": "hero-cta",
+    "path": "/",
+    "sessionId": "sess-2",
+    "timestamp": 1778354597145,
+    "scrollDepth": 30,
+    "timeOnPage": 25
+  },
+  {
+    "type": "rage_click",
+    "element": "learn-link",
+    "path": "/",
+    "sessionId": "sess-3",
+    "timestamp": 1778354594145,
+    "scrollDepth": 40,
+    "timeOnPage": 30
+  },
+  {
+    "type": "exit",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-4",
+    "timestamp": 1778354591145,
+    "scrollDepth": 45,
+    "timeOnPage": 35
+  },
+  {
+    "type": "scroll",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-5",
+    "timestamp": 1778354588145,
+    "scrollDepth": 20,
+    "timeOnPage": 40
+  },
+  {
+    "type": "click",
+    "element": "docs-link",
+    "path": "/",
+    "sessionId": "sess-6",
+    "timestamp": 1778354585145,
+    "scrollDepth": 25,
+    "timeOnPage": 45
+  },
+  {
+    "type": "click",
+    "element": "hero-cta",
+    "path": "/",
+    "sessionId": "sess-7",
+    "timestamp": 1778354582145,
+    "scrollDepth": 30,
+    "timeOnPage": 50
+  },
+  {
+    "type": "click",
+    "element": "learn-link",
+    "path": "/",
+    "sessionId": "sess-8",
+    "timestamp": 1778354579145,
+    "scrollDepth": 40,
+    "timeOnPage": 15
+  },
+  {
+    "type": "rage_click",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-9",
+    "timestamp": 1778354576145,
+    "scrollDepth": 45,
+    "timeOnPage": 20
+  },
+  {
+    "type": "exit",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-10",
+    "timestamp": 1778354573145,
+    "scrollDepth": 20,
+    "timeOnPage": 25
+  },
+  {
+    "type": "scroll",
+    "element": "docs-link",
+    "path": "/",
+    "sessionId": "sess-11",
+    "timestamp": 1778354570145,
+    "scrollDepth": 25,
+    "timeOnPage": 30
+  },
+  {
+    "type": "click",
+    "element": "hero-cta",
+    "path": "/",
+    "sessionId": "sess-0",
+    "timestamp": 1778354567145,
+    "scrollDepth": 30,
+    "timeOnPage": 35
+  },
+  {
+    "type": "click",
+    "element": "learn-link",
+    "path": "/",
+    "sessionId": "sess-1",
+    "timestamp": 1778354564145,
+    "scrollDepth": 40,
+    "timeOnPage": 40
+  },
+  {
+    "type": "click",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-2",
+    "timestamp": 1778354561145,
+    "scrollDepth": 45,
+    "timeOnPage": 45
+  },
+  {
+    "type": "rage_click",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-3",
+    "timestamp": 1778354558145,
+    "scrollDepth": 20,
+    "timeOnPage": 50
+  },
+  {
+    "type": "exit",
+    "element": "docs-link",
+    "path": "/",
+    "sessionId": "sess-4",
+    "timestamp": 1778354555145,
+    "scrollDepth": 25,
+    "timeOnPage": 15
+  },
+  {
+    "type": "scroll",
+    "element": "hero-cta",
+    "path": "/",
+    "sessionId": "sess-5",
+    "timestamp": 1778354552145,
+    "scrollDepth": 30,
+    "timeOnPage": 20
+  },
+  {
+    "type": "click",
+    "element": "learn-link",
+    "path": "/",
+    "sessionId": "sess-6",
+    "timestamp": 1778354549145,
+    "scrollDepth": 40,
+    "timeOnPage": 25
+  },
+  {
+    "type": "click",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-7",
+    "timestamp": 1778354546145,
+    "scrollDepth": 45,
+    "timeOnPage": 30
+  },
+  {
+    "type": "click",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-8",
+    "timestamp": 1778354543145,
+    "scrollDepth": 20,
+    "timeOnPage": 35
+  },
+  {
+    "type": "rage_click",
+    "element": "docs-link",
+    "path": "/",
+    "sessionId": "sess-9",
+    "timestamp": 1778354540145,
+    "scrollDepth": 25,
+    "timeOnPage": 40
+  },
+  {
+    "type": "exit",
+    "element": "hero-cta",
+    "path": "/",
+    "sessionId": "sess-10",
+    "timestamp": 1778354537145,
+    "scrollDepth": 30,
+    "timeOnPage": 45
+  },
+  {
+    "type": "scroll",
+    "element": "learn-link",
+    "path": "/",
+    "sessionId": "sess-11",
+    "timestamp": 1778354534145,
+    "scrollDepth": 40,
+    "timeOnPage": 50
+  },
+  {
+    "type": "click",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-0",
+    "timestamp": 1778354531145,
+    "scrollDepth": 45,
+    "timeOnPage": 15
+  },
+  {
+    "type": "click",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-1",
+    "timestamp": 1778354528145,
+    "scrollDepth": 20,
+    "timeOnPage": 20
+  },
+  {
+    "type": "click",
+    "element": "docs-link",
+    "path": "/",
+    "sessionId": "sess-2",
+    "timestamp": 1778354525145,
+    "scrollDepth": 25,
+    "timeOnPage": 25
+  },
+  {
+    "type": "rage_click",
+    "element": "hero-cta",
+    "path": "/",
+    "sessionId": "sess-3",
+    "timestamp": 1778354522145,
+    "scrollDepth": 30,
+    "timeOnPage": 30
+  },
+  {
+    "type": "exit",
+    "element": "learn-link",
+    "path": "/",
+    "sessionId": "sess-4",
+    "timestamp": 1778354519145,
+    "scrollDepth": 40,
+    "timeOnPage": 35
+  },
+  {
+    "type": "scroll",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-5",
+    "timestamp": 1778354516145,
+    "scrollDepth": 45,
+    "timeOnPage": 40
+  },
+  {
+    "type": "click",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-6",
+    "timestamp": 1778354513145,
+    "scrollDepth": 20,
+    "timeOnPage": 45
+  },
+  {
+    "type": "click",
+    "element": "docs-link",
+    "path": "/",
+    "sessionId": "sess-7",
+    "timestamp": 1778354510145,
+    "scrollDepth": 25,
+    "timeOnPage": 50
+  },
+  {
+    "type": "click",
+    "element": "hero-cta",
+    "path": "/",
+    "sessionId": "sess-8",
+    "timestamp": 1778354507145,
+    "scrollDepth": 30,
+    "timeOnPage": 15
+  },
+  {
+    "type": "rage_click",
+    "element": "learn-link",
+    "path": "/",
+    "sessionId": "sess-9",
+    "timestamp": 1778354504145,
+    "scrollDepth": 40,
+    "timeOnPage": 20
+  },
+  {
+    "type": "exit",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-10",
+    "timestamp": 1778354501145,
+    "scrollDepth": 45,
+    "timeOnPage": 25
+  },
+  {
+    "type": "scroll",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-11",
+    "timestamp": 1778354498145,
+    "scrollDepth": 20,
+    "timeOnPage": 30
+  },
+  {
+    "type": "click",
+    "element": "docs-link",
+    "path": "/",
+    "sessionId": "sess-0",
+    "timestamp": 1778354495145,
+    "scrollDepth": 25,
+    "timeOnPage": 35
+  },
+  {
+    "type": "click",
+    "element": "hero-cta",
+    "path": "/",
+    "sessionId": "sess-1",
+    "timestamp": 1778354492145,
+    "scrollDepth": 30,
+    "timeOnPage": 40
+  },
+  {
+    "type": "click",
+    "element": "learn-link",
+    "path": "/",
+    "sessionId": "sess-2",
+    "timestamp": 1778354489145,
+    "scrollDepth": 40,
+    "timeOnPage": 45
+  },
+  {
+    "type": "rage_click",
+    "element": "deploy-button",
+    "path": "/",
+    "sessionId": "sess-3",
+    "timestamp": 1778354486145,
+    "scrollDepth": 45,
+    "timeOnPage": 50
+  }
+]
