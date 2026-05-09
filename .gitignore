@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/.venv
+**/.venv
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,6 +14,8 @@
 
 # testing
 /coverage
+__pycache__/
+*.py[cod]
 
 # next.js
 /.next/
