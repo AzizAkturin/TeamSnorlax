@@ -7,7 +7,13 @@ from ab_monitor.posthog import fetch_events
 from ab_monitor.settings import Settings
 from ab_monitor.tensorlake import Image, application, function
 
-runtime_image = Image().run("pip install .")
+runtime_image = (
+    Image()
+    .copy("pyproject.toml", "/app/pyproject.toml")
+    .copy("README.md", "/app/README.md")
+    .copy("src", "/app/src")
+    .run("pip install /app")
+)
 
 
 @application()
