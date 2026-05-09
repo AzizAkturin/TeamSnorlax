@@ -10,6 +10,7 @@
     "agent": "bun --env-file=.env.local agent/index.ts"
   },
   "dependencies": {
+    "@insforge/sdk": "^1.2.7",
     "@octokit/rest": "^22.0.1",
     "next": "16.2.6",
     "react": "19.2.4",
