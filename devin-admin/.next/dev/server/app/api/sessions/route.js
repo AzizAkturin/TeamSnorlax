@@ -1,0 +1,12 @@
+var R=require("../../../chunks/[turbopack]_runtime.js")("server/app/api/sessions/route.js")
+R.c("server/chunks/Desktop_TeamSnorlax_devin-admin_app_api_sessions_route_ts_01mvq6c._.js")
+R.c("server/chunks/0zpf_next_dist_12d2l44._.js")
+R.c("server/chunks/0zpf_zod_v3_0hv34l0._.js")
+R.c("server/chunks/0zpf_@insforge_shared-schemas_dist_0k-h4~5._.js")
+R.c("server/chunks/0zpf_tr46_0myyecz._.js")
+R.c("server/chunks/0zpf_ws_08gvlzh._.js")
+R.c("server/chunks/Desktop_TeamSnorlax_0-j.aup._.js")
+R.c("server/chunks/[root-of-the-server]__0eyc8zs._.js")
+R.c("server/chunks/0eti_devin-admin__next-internal_server_app_api_sessions_route_actions_03k5tvo.js")
+R.m("[project]/Desktop/TeamSnorlax/devin-admin/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/Desktop/TeamSnorlax/devin-admin/app/api/sessions/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/Desktop/TeamSnorlax/devin-admin/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/Desktop/TeamSnorlax/devin-admin/app/api/sessions/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports
