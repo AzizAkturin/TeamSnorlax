@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="flex flex-col items-center text-center px-6 pt-10 pb-8 sm:pt-14 sm:pb-10">
+    <section className="flex flex-col items-center text-center px-6 pt-8 pb-6 sm:pt-12 sm:pb-8">
       <span className="text-xs font-semibold tracking-widest uppercase text-amber-600 mb-4">
-        Now in public aziz
+        Now in public beta
       </span>
       <h1 className="text-5xl font-bold tracking-tight text-gray-900 max-w-3xl leading-tight">
         The analytics platform your team will actually use
