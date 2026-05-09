@@ -37,6 +37,11 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("OPENROUTER_API_KEY", "OPENROUTER"),
     )
     openrouter_model: str | None = Field(default=None, validation_alias="OPENROUTER_MODEL")
+    insforge_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("INSFORGE_URL", "NEXT_PUBLIC_INSFORGE_URL"),
+    )
+    insforge_api_key: str | None = Field(default=None, validation_alias="INSFORGE_API_KEY")
     devin_api_key: str | None = Field(
         default=None,
         validation_alias=AliasChoices("DEVIA_API_KEY", "DEVIN_API_KEY"),
