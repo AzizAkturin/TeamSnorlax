@@ -1,48 +1,54 @@
 import { execSync } from "child_process";
 
-const NIA_API_KEY = process.env.NIA_API_KEY!;
+const REPO = `${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}`;
 
-function niaEnv() {
-  return { ...process.env, NIA_API_KEY };
+function nia(args: string, input?: string): string {
+  try {
+    const result = execSync(`nia ${args}`, {
+      cwd: process.cwd(),
+      encoding: "utf-8",
+      timeout: 20000,
+      env: { ...process.env, NIA_API_KEY: process.env.NIA_API_KEY },
+      input,
+    });
+    return result.trim();
+  } catch {
+    return "";
+  }
 }
 
 export function searchCodebase(query: string): string {
-  try {
-    const result = execSync(`nia search "${query}"`, {
-      cwd: process.cwd(),
-      encoding: "utf-8",
-      timeout: 15000,
-      env: niaEnv(),
-    });
-    return result.trim();
-  } catch {
-    return "";
-  }
+  return nia(`github search ${REPO} "${query}" --per-page 5`);
 }
 
-export function getFileContext(filePath: string): string {
-  try {
-    const result = execSync(`nia context "${filePath}"`, {
-      cwd: process.cwd(),
-      encoding: "utf-8",
-      timeout: 15000,
-      env: niaEnv(),
-    });
-    return result.trim();
-  } catch {
-    return "";
-  }
+export function getRepoTree(): string {
+  return nia(`github tree ${REPO}`);
+}
+
+export function readFile(filePath: string): string {
+  return nia(`github read ${REPO} ${filePath}`);
 }
 
 export function buildCodebaseContext(focusAreas: string[]): string {
-  const sections: string[] = [];
-
-  for (const area of focusAreas) {
+  const tree = getRepoTree();
+  const searches = focusAreas.map((area) => {
     const result = searchCodebase(area);
-    if (result) {
-      sections.push(`### Context for "${area}":\n${result}`);
-    }
-  }
+    return result ? `### "${area}"\n${result}` : "";
+  }).filter(Boolean);
 
-  return sections.join("\n\n");
+  return [
+    tree ? `## Repo Structure\n${tree}` : "",
+    searches.length ? `## Code Search Results\n\n${searches.join("\n\n")}` : "",
+  ].filter(Boolean).join("\n\n");
+}
+
+export function saveAnalyticsContext(title: string, summary: string, content: string): void {
+  nia(
+    `contexts save "${title}" --summary "${summary}" --agent ux-agent --tags analytics,ux --memory-type episodic`,
+    content
+  );
+}
+
+export function searchContext(query: string): string {
+  return nia(`contexts semantic "${query}" --workspace ux-agent`);
 }

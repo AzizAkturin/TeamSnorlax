@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { createClient } from "@insforge/sdk";
 import { takeScreenshot } from "./screenshot";
-import { searchCodebase } from "./nia";
+import { searchCodebase, readFile } from "./nia";
 import type { AnalyticsSummary } from "./types";
 
 const insforge = createClient({
@@ -182,7 +182,8 @@ export async function enrichPR(
   console.log("\n🔍 Fetching Nia context for changed files...");
   const niaLines: string[] = [];
   for (const file of changedFiles.slice(0, 5)) {
-    const ctx = searchCodebase(file.filename);
+    const content = readFile(file.filename);
+    const ctx = content || searchCodebase(file.filename);
     if (ctx) {
       niaLines.push(`- **\`${file.filename}\`** — ${ctx.slice(0, 220).replace(/\n/g, " ").trim()}`);
     }
