@@ -5,13 +5,18 @@ from typing import Any
 from ab_monitor.monitor import analyze_events
 from ab_monitor.posthog import fetch_events
 from ab_monitor.settings import Settings
-from ab_monitor.tensorlake import application, function
+from ab_monitor.tensorlake import Image, application, function
+
+runtime_image = Image().run(
+    "pip install 'httpx>=0.28.1' 'posthog>=7.14.0' 'pydantic-settings>=2.14.1' 'statsmodels>=0.14.6'"
+)
 
 
 @application()
 @function(
     timeout=1200,
     max_containers=1,
+    image=runtime_image,
     secrets=[
         "POSTHOG_PERSONAL_API_KEY",
         "POSTHOG_PROJECT_ID",
