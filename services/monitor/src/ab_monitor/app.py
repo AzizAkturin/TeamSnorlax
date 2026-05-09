@@ -9,7 +9,17 @@ from ab_monitor.tensorlake import application, function
 
 
 @application()
-@function(timeout=1200, max_containers=1)
+@function(
+    timeout=1200,
+    max_containers=1,
+    secrets=[
+        "POSTHOG_PERSONAL_API_KEY",
+        "POSTHOG_PROJECT_ID",
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_MODEL",
+        "NIA_API_KEY",
+    ],
+)
 def monitor_posthog(
     project_id: str | None = None,
     lookback_hours: int = 24,
