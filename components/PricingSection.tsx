@@ -70,10 +70,10 @@ export default function PricingSection() {
               </ul>
               <Link
                 href="/signup"
-                className={`block text-center py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`block text-center py-2.5 rounded-lg text-sm font-semibold shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 ${
                   tier.popular
-                    ? "bg-gray-900 text-white hover:bg-gray-700"
-                    : "border border-gray-200 text-gray-700 hover:bg-gray-50"
+                    ? "bg-amber-500 text-white hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-px active:shadow-none focus-visible:outline-amber-600"
+                    : "border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 active:translate-y-px focus-visible:outline-gray-400"
                 }`}
                 data-ph-id={`pricing-cta-${tier.name.toLowerCase()}`}
               >
