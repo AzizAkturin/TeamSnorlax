@@ -1,0 +1,21 @@
+{
+  "id": "tc_no_clear_winner_reverts",
+  "description": "When all variants perform within noise of each other (no statistically significant winner), the agent should revert to control rather than shipping an arbitrary variant",
+  "input": {
+    "component": "PricingCard",
+    "experiment_duration_days": 7,
+    "posthog_results": {
+      "control": { "click_rate": 0.031, "sessions": 210 },
+      "variant_a": { "click_rate": 0.033, "sessions": 208 },
+      "variant_b": { "click_rate": 0.029, "sessions": 211 }
+    },
+    "significance_threshold": 0.05
+  },
+  "expected": {
+    "winner": "control",
+    "final_pr_opened": true,
+    "reverts_to_control": true,
+    "pr_description_explains_no_winner": true,
+    "feature_flags_disabled": true
+  }
+}

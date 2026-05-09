@@ -1,0 +1,19 @@
+{
+  "id": "tc_insufficient_sessions",
+  "description": "Agent aborts early when fewer than 10 sessions are in the analytics data — no Devin session should be created",
+  "input": {
+    "events": [
+      { "type": "click", "element": "hero-cta", "path": "/", "timestamp": 1700000000000, "sessionId": "s1" },
+      { "type": "exit", "path": "/", "timestamp": 1700000001000, "sessionId": "s1" },
+      { "type": "click", "element": "hero-cta", "path": "/", "timestamp": 1700000002000, "sessionId": "s2" }
+    ],
+    "total_unique_sessions": 2
+  },
+  "expected": {
+    "agent_aborted": true,
+    "abort_reason": "insufficient_sessions",
+    "minimum_sessions_required": 10,
+    "devin_session_created": false,
+    "db_run_created": false
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "tc_drop_off_triggers_hero",
+  "description": "When the homepage has a very low average scroll depth (users not reaching below the fold), the agent should hypothesize a hero section change and target a component in that area",
+  "input": {
+    "analytics_summary": {
+      "totalSessions": 55,
+      "avgTimeOnPage": 9,
+      "rageclickElements": [],
+      "dropOffPoints": [
+        { "path": "/", "avgScrollDepth": 12, "count": 38 }
+      ],
+      "exitPaths": [{ "path": "/", "count": 38 }],
+      "topClickedElements": []
+    }
+  },
+  "expected": {
+    "devin_prompt_contains": "scroll",
+    "devin_prompt_contains": "12",
+    "hypothesis_targets_area": "hero",
+    "devin_session_created": true
+  }
+}

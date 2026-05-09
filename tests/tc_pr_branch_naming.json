@@ -1,0 +1,15 @@
+{
+  "id": "tc_pr_branch_naming",
+  "description": "The PR enricher polls for PRs where head.ref starts with 'ux-agent/' — a PR on any other branch should not be picked up as the experiment PR",
+  "input": {
+    "open_prs": [
+      { "number": 10, "head_ref": "feature/dark-mode", "created_at": "2024-11-01T10:00:00Z" },
+      { "number": 11, "head_ref": "ux-agent/proposal-1700000000000", "created_at": "2024-11-01T10:05:00Z" }
+    ],
+    "created_after_ms": 1730451000000
+  },
+  "expected": {
+    "matched_pr_number": 11,
+    "ignored_pr_number": 10
+  }
+}
