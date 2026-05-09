@@ -34,8 +34,8 @@ def monitor_posthog(
     lookback_hours: int = 24,
     seen_fingerprints: list[str] | None = None,
 ) -> dict[str, Any]:
-    config = Settings.from_env()
     try:
+        config = Settings.from_env()
         events = fetch_events(config, project_id, lookback_hours)
     except Exception as error:
         return {
@@ -45,10 +45,20 @@ def monitor_posthog(
             "error_type": type(error).__name__,
             "error": str(error),
         }
-    return analyze_events(
-        events=events,
-        config=config,
-        project_id=project_id,
-        lookback_hours=lookback_hours,
-        seen_fingerprints=set(seen_fingerprints or []),
-    )
+    try:
+        return analyze_events(
+            events=events,
+            config=config,
+            project_id=project_id,
+            lookback_hours=lookback_hours,
+            seen_fingerprints=set(seen_fingerprints or []),
+        )
+    except Exception as error:
+        return {
+            "status": "analysis_failed",
+            "project_id": project_id,
+            "lookback_hours": lookback_hours,
+            "event_count": len(events),
+            "error_type": type(error).__name__,
+            "error": str(error),
+        }
