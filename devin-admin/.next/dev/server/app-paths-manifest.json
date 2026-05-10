@@ -1,5 +1,8 @@
 {
+  "/api/onboard/save/route": "app/api/onboard/save/route.js",
+  "/api/onboard/validate/route": "app/api/onboard/validate/route.js",
   "/api/sessions/route": "app/api/sessions/route.js",
   "/dashboard/page": "app/dashboard/page.js",
+  "/onboard/page": "app/onboard/page.js",
   "/page": "app/page.js"
 }

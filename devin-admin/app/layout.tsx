@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -8,15 +8,21 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
+const jetMono = JetBrains_Mono({
+  variable: "--font-jet-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+});
+
 export const metadata: Metadata = {
-  title: "Devin Admin",
-  description: "Monitor active Devin UX sessions",
+  title: "Autoresearch — Devin",
+  description: "Continuous A/B test designer and executor. PostHog → detector → Devin → judge.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${dmSans.variable} h-full`}>
-      <body className="min-h-full flex flex-col font-[family-name:var(--font-dm-sans)] bg-white text-gray-900 antialiased">
+    <html lang="en" className={`${dmSans.variable} ${jetMono.variable} h-full`}>
+      <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
         {children}
       </body>
     </html>
