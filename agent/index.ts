@@ -68,7 +68,7 @@ async function run() {
   console.log(`\n✅ Devin session started`);
   console.log(`   Watch Devin work: ${session.sessionUrl}`);
 
-  const prUrl = await enrichPR(sessionCreatedAt, summary);
+  const prUrl = await enrichPR(sessionCreatedAt, summary, historicalContext);
 
   const prNumberMatch = prUrl.match(/\/pull\/(\d+)$/);
   await updateAgentRun(runId, {
