@@ -23,7 +23,7 @@ export default function SignInForm() {
         setOauthLoading(null);
         return;
       }
-      router.replace("/dashboard");
+      router.replace("/onboard");
     });
   }, [router]);
 
@@ -43,7 +43,7 @@ export default function SignInForm() {
     try {
       const { data, error: authError } = await insforge.auth.signInWithPassword({ email, password });
       if (authError) throw authError;
-      if (data?.accessToken) router.push("/dashboard");
+      if (data?.accessToken) router.push("/onboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {
