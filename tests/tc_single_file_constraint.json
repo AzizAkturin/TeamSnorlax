@@ -1,0 +1,16 @@
+{
+  "id": "tc_single_file_constraint",
+  "description": "Devin must only modify one file per experiment run — the prompt explicitly enforces this and the PR enricher should flag a violation if more than one file is changed",
+  "input": {
+    "pr_number": 17,
+    "files_changed": [
+      { "filename": "app/components/PricingCard.tsx", "status": "modified", "additions": 12, "deletions": 4 },
+      { "filename": "app/components/PricingHeader.tsx", "status": "modified", "additions": 3, "deletions": 1 }
+    ]
+  },
+  "expected": {
+    "files_changed_count": 2,
+    "single_file_violation": true,
+    "experiment_valid": false
+  }
+}

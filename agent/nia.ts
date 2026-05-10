@@ -1,48 +1,103 @@
 import { execSync } from "child_process";
 
-const NIA_API_KEY = process.env.NIA_API_KEY!;
+const REPO = `${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}`;
 
-function niaEnv() {
-  return { ...process.env, NIA_API_KEY };
+function nia(args: string, input?: string): string {
+  try {
+    const result = execSync(`nia ${args}`, {
+      cwd: process.cwd(),
+      encoding: "utf-8",
+      timeout: 20000,
+      env: { ...process.env, NIA_API_KEY: process.env.NIA_API_KEY },
+      input,
+    });
+    return result.trim();
+  } catch {
+    return "";
+  }
 }
 
 export function searchCodebase(query: string): string {
-  try {
-    const result = execSync(`nia search "${query}"`, {
-      cwd: process.cwd(),
-      encoding: "utf-8",
-      timeout: 15000,
-      env: niaEnv(),
-    });
-    return result.trim();
-  } catch {
-    return "";
-  }
+  return nia(`github search ${REPO} "${query}" --per-page 5`);
 }
 
-export function getFileContext(filePath: string): string {
-  try {
-    const result = execSync(`nia context "${filePath}"`, {
-      cwd: process.cwd(),
-      encoding: "utf-8",
-      timeout: 15000,
-      env: niaEnv(),
-    });
-    return result.trim();
-  } catch {
-    return "";
-  }
+export function getRepoTree(): string {
+  return nia(`github tree ${REPO}`);
+}
+
+export function readFile(filePath: string): string {
+  return nia(`github read ${REPO} ${filePath}`);
 }
 
 export function buildCodebaseContext(focusAreas: string[]): string {
-  const sections: string[] = [];
-
-  for (const area of focusAreas) {
+  const tree = getRepoTree();
+  const searches = focusAreas.map((area) => {
     const result = searchCodebase(area);
-    if (result) {
-      sections.push(`### Context for "${area}":\n${result}`);
-    }
-  }
+    return result ? `### "${area}"\n${result}` : "";
+  }).filter(Boolean);
 
-  return sections.join("\n\n");
+  return [
+    tree ? `## Repo Structure\n${tree}` : "",
+    searches.length ? `## Code Search Results\n\n${searches.join("\n\n")}` : "",
+  ].filter(Boolean).join("\n\n");
+}
+
+export function saveAnalyticsContext(title: string, summary: string, content: string): void {
+  nia(
+    `contexts save "${title}" --summary "${summary}" --content - --agent ux-agent --tags analytics,ux --memory-type episodic`,
+    content
+  );
+}
+
+export function saveHistoricalRuns(runs: Array<Record<string, unknown>>): void {
+  if (!runs.length) return;
+  const content = runs
+    .map((r) =>
+      [
+        `Date: ${r.created_at}`,
+        `Sessions: ${r.sessions_analyzed}`,
+        `Avg time on page: ${r.avg_time_on_page_seconds}s`,
+        r.top_rage_click ? `Top rage-click: ${r.top_rage_click}` : null,
+        r.drop_off_path ? `Drop-off path: ${r.drop_off_path} (${r.drop_off_scroll_depth}% scroll)` : null,
+        r.pr_url ? `PR: ${r.pr_url} (${r.status})` : null,
+      ]
+        .filter(Boolean)
+        .join(" | ")
+    )
+    .join("\n");
+
+  nia(
+    `contexts save "Past agent runs" --summary "${runs.length} previous UX agent runs" --content - --agent ux-agent --tags history,agent-runs --memory-type episodic`,
+    content
+  );
+}
+
+export function saveChangesMade(
+  prUrl: string,
+  files: Array<{ filename: string; additions: number; deletions: number }>,
+  prBody: string
+): void {
+  const date = new Date().toISOString().slice(0, 10);
+  const fileList = files.map((f) => `  - ${f.filename} (+${f.additions}/-${f.deletions})`).join("\n");
+  const content = [
+    `Date: ${date}`,
+    `PR: ${prUrl}`,
+    "",
+    "Files changed:",
+    fileList,
+    "",
+    "What was done (Devin's description):",
+    prBody.slice(0, 1000),
+  ].join("\n");
+
+  nia(
+    `contexts save "UX changes ${date}" --summary "Files changed by UX agent on ${date}" --content - --agent ux-agent --tags changes,completed --memory-type episodic`,
+    content
+  );
+}
+
+export function searchContext(query: string): string {
+  const result = nia(`contexts semantic "${query}" --workspace ux-agent`);
+  if (!result || result.includes("No matching contexts found") || result.includes("Total: 0")) return "";
+  return result;
 }

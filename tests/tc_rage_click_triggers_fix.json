@@ -1,0 +1,22 @@
+{
+  "id": "tc_rage_click_triggers_fix",
+  "description": "When rage clicks are the dominant signal, the Devin prompt must call out the specific element and its rage-click count so Devin targets the right component",
+  "input": {
+    "analytics_summary": {
+      "totalSessions": 42,
+      "avgTimeOnPage": 18,
+      "rageclickElements": [
+        { "element": "pricing-toggle", "count": 31 }
+      ],
+      "dropOffPoints": [],
+      "exitPaths": [],
+      "topClickedElements": []
+    }
+  },
+  "expected": {
+    "devin_prompt_contains": "pricing-toggle",
+    "devin_prompt_contains_count": "31",
+    "devin_session_created": true,
+    "pr_branch_prefix": "ux-agent/"
+  }
+}

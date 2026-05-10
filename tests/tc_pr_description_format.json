@@ -1,0 +1,28 @@
+{
+  "id": "tc_pr_description_format",
+  "description": "The enriched PR description must contain all required sections with real analytics numbers — no filler text, each changed file gets exactly one bullet citing a specific metric",
+  "input": {
+    "pr_number": 19,
+    "analytics_summary": {
+      "totalSessions": 87,
+      "avgTimeOnPage": 22,
+      "rageclickElements": [{ "element": "nav-pricing-link", "count": 14 }],
+      "dropOffPoints": [{ "path": "/pricing", "avgScrollDepth": 28, "count": 19 }],
+      "exitPaths": [{ "path": "/pricing", "count": 34 }],
+      "topClickedElements": []
+    },
+    "files_changed": [
+      { "filename": "app/components/NavBar.tsx", "status": "modified", "additions": 6, "deletions": 2 }
+    ],
+    "devin_body": "- `app/components/NavBar.tsx` — increased pricing link contrast to reduce rage clicks (14× rage-clicked)"
+  },
+  "expected": {
+    "description_contains_section": "Analytics That Triggered This",
+    "description_contains_section": "Visual Changes",
+    "description_contains_section": "Walkthrough",
+    "description_contains_section": "Files Changed",
+    "description_contains_metric": "87",
+    "bullets_per_file": 1,
+    "no_filler_text": true
+  }
+}

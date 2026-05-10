@@ -1,0 +1,24 @@
+{
+  "id": "tc_db_run_lifecycle",
+  "description": "The agent run record in InsForge must transition through the correct status states: created with analytics data, updated to 'running' with Devin session info, then updated to 'pr_open' with PR details",
+  "input": {
+    "analytics_summary": {
+      "totalSessions": 30,
+      "avgTimeOnPage": 45,
+      "rageclickElements": [{ "element": "cta-button", "count": 8 }],
+      "dropOffPoints": [{ "path": "/", "avgScrollDepth": 40, "count": 12 }],
+      "exitPaths": [],
+      "topClickedElements": []
+    },
+    "devin_session_id": "dev_abc123",
+    "pr_number": 25,
+    "pr_url": "https://github.com/org/repo/pull/25"
+  },
+  "expected": {
+    "db_run_created": true,
+    "initial_status": null,
+    "after_devin_status": "running",
+    "after_pr_status": "pr_open",
+    "run_fields_set": ["sessions_analyzed", "avg_time_on_page_seconds", "top_rage_click", "devin_session_id", "devin_session_url", "pr_number", "pr_url"]
+  }
+}

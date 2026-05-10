@@ -40,6 +40,16 @@ async function persistToInsForge(event: AnalyticsEvent) {
   ]);
 }
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -55,16 +65,17 @@ export async function POST(req: NextRequest) {
       viewport: body.viewport,
     };
 
-    const validTypes = ["click", "scroll", "exit", "hover", "rage_click"];
+    const validTypes = ["click", "scroll", "exit", "hover", "rage_click", "pageview", "ragclick"];
     if (!validTypes.includes(event.type) || !event.path || !event.sessionId) {
-      return NextResponse.json({ error: "Invalid event" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid event" }, { status: 400, headers: CORS });
     }
 
-    appendLocal(event);
-    persistToInsForge(event).catch(() => {}); // fire-and-forget, don't block the response
+    // Only write to local file for internal (no siteId) events
+    if (!body.siteId) appendLocal(event);
+    persistToInsForge(event).catch(() => {});
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: CORS });
   } catch {
-    return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    return NextResponse.json({ error: "Bad request" }, { status: 400, headers: CORS });
   }
 }
