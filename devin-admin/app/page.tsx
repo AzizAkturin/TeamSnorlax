@@ -1,9 +1,9 @@
-import SignInForm from "@/components/SignInForm";
+import SessionsDashboard from "@/components/SessionsDashboard";
 
-export default function SignInPage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <SignInForm />
-    </div>
-  );
+export const metadata = {
+  title: "Autoresearch — Devin",
+};
+
+export default function HomePage() {
+  return <SessionsDashboard />;
 }
