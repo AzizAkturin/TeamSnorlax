@@ -1,11 +1,10 @@
-const stats = [
-  { label: "Monthly active users", value: "24,891", change: "+12.4%", up: true },
-  { label: "Revenue (MTD)", value: "$183,240", change: "+8.1%", up: true },
-  { label: "Avg. session duration", value: "4m 32s", change: "-2.3%", up: false },
-  { label: "Data sources connected", value: "17", change: "+3 this month", up: true },
-];
+interface Stat {
+  label: string;
+  value: string;
+  sub: string;
+}
 
-export default function StatCards() {
+export default function StatCards({ stats }: { stats: Stat[] }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
       {stats.map((stat) => (
@@ -18,9 +17,7 @@ export default function StatCards() {
             {stat.label}
           </p>
           <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-          <p className={`mt-1 text-xs font-medium ${stat.up ? "text-green-600" : "text-red-500"}`}>
-            {stat.change}
-          </p>
+          <p className="mt-1 text-xs text-gray-400">{stat.sub}</p>
         </div>
       ))}
     </div>
