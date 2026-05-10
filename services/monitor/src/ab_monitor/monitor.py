@@ -167,9 +167,13 @@ def _load_seen(config: Settings, customer_id: str | None = None) -> set[str]:
     if not (config.insforge_url and config.insforge_api_key):
         return set()
     try:
-        return list_seen_fingerprints(config, customer_id=customer_id)
+        raw = list_seen_fingerprints(config, customer_id=customer_id)
     except Exception:
         return set()
+    if not customer_id:
+        return raw
+    suffix = f"_{customer_id[:8]}"
+    return {fp[: -len(suffix)] if fp.endswith(suffix) else fp for fp in raw}
 
 
 def _ensure_flag(
