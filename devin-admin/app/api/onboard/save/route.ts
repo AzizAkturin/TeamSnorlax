@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@insforge/sdk";
 
+export const dynamic = "force-dynamic";
+
 const insforge = createClient({
   baseUrl: process.env.INSFORGE_URL!,
   anonKey: process.env.INSFORGE_API_KEY!,
@@ -14,7 +16,14 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await insforge.database
     .from("customers")
-    .insert([{ github_token: githubToken, github_owner: githubOwner, github_repo: githubRepo, prod_url: prodUrl }])
+    .insert([
+      {
+        github_token: githubToken,
+        github_owner: githubOwner,
+        github_repo: githubRepo,
+        prod_url: prodUrl,
+      },
+    ])
     .select("id,site_id")
     .single();
 
