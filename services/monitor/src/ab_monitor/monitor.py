@@ -19,6 +19,7 @@ def run_monitor(
     project_id: str | None = None,
     lookback_hours: int = 24,
     seen_fingerprints: set[str] | None = None,
+    customer_id: str | None = None,
 ) -> dict[str, Any]:
     events = fetch_events(config, project_id, lookback_hours)
     return analyze_events(
@@ -27,6 +28,7 @@ def run_monitor(
         project_id=project_id,
         lookback_hours=lookback_hours,
         seen_fingerprints=seen_fingerprints,
+        customer_id=customer_id,
     )
 
 
@@ -37,8 +39,13 @@ def analyze_events(
     project_id: str | None,
     lookback_hours: int,
     seen_fingerprints: set[str] | None,
+    customer_id: str | None = None,
 ) -> dict[str, Any]:
-    seen = set(seen_fingerprints) if seen_fingerprints is not None else _load_seen(config)
+    seen = (
+        set(seen_fingerprints)
+        if seen_fingerprints is not None
+        else _load_seen(config, customer_id)
+    )
 
     opportunities = sorted(
         detect(events),
@@ -60,9 +67,18 @@ def analyze_events(
         }
 
     chosen = actionable[0]
+    if customer_id:
+        suffix = customer_id[:8]
+        chosen = chosen.model_copy(
+            update={"fingerprint": f"{chosen.fingerprint}_{suffix}"}
+        )
     nia_context = enrich_with_nia(config, chosen)
     try:
         spec = make_spec(config, chosen, nia_context)
+        if customer_id:
+            spec = spec.model_copy(
+                update={"id": f"exp_{chosen.fingerprint[:12]}_{customer_id[:8]}"}
+            )
     except Exception as error:
         return {
             "status": "spec_failed",
@@ -93,6 +109,7 @@ def analyze_events(
                     "nia_context": nia_context,
                     "summary": chosen.to_dict(),
                     "posthog_flag_key": flag_key,
+                    "customer_id": customer_id,
                 },
             )
             persistence = {"status": "inserted", "flag_key": flag_key, "flag_id": flag_id}
@@ -146,11 +163,11 @@ def is_actionable(opportunity: Opportunity, config: Settings) -> bool:
     )
 
 
-def _load_seen(config: Settings) -> set[str]:
+def _load_seen(config: Settings, customer_id: str | None = None) -> set[str]:
     if not (config.insforge_url and config.insforge_api_key):
         return set()
     try:
-        return list_seen_fingerprints(config)
+        return list_seen_fingerprints(config, customer_id=customer_id)
     except Exception:
         return set()
 

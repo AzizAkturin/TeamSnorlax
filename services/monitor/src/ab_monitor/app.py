@@ -61,6 +61,7 @@ def monitor_posthog(request: MonitorRequest = MonitorRequest()) -> "dict[str, An
             project_id=project_id,
             lookback_hours=lookback_hours,
             seen_fingerprints=seen,
+            customer_id=request.customer_id,
         )
     except Exception as error:
         return {
