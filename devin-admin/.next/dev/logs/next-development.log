@@ -1,2 +1,5 @@
-{"timestamp":"00:00:00.867","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:04:27.920","source":"Server","level":"LOG","message":"✓ Compiled in 506ms"}
+{"timestamp":"00:00:00.713","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:01:47.081","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
+{"timestamp":"00:02:07.394","source":"Server","level":"LOG","message":"✓ Compiled in 0ms"}
+{"timestamp":"00:10:24.023","source":"Server","level":"LOG","message":"✓ Compiled in 107ms"}
+{"timestamp":"00:11:32.593","source":"Server","level":"LOG","message":"  Reload env: .env.local"}

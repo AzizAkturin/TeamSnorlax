@@ -13,11 +13,19 @@ class RiskLevel(StrEnum):
 
 
 class MonitorRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     project_id: str | None = None
     lookback_hours: int = 24
     seen_fingerprints: list[str] = Field(default_factory=list)
+
+    customer_id: str | None = None
+    posthog_personal_api_key: str | None = None
+    posthog_host: str | None = None
+    posthog_event_names: str | None = None
+    github_owner: str | None = None
+    github_repo: str | None = None
+    github_base_branch: str | None = None
 
 
 MonitorRequest.model_rebuild()

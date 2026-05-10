@@ -3,59 +3,42 @@
 import { useState } from "react";
 
 type Repo = { fullName: string; name: string; private: boolean };
-type Step = 1 | 2 | 3 | 4;
-
-const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "https://team-snorlax.vercel.app";
-
-function snippet(siteId: string) {
-  return `<script>
-(function(){
-  var S="${siteId}", U="${APP_URL}/api/analytics";
-  var sid=Math.random().toString(36).slice(2);
-  var t0=Date.now(), lc=null, lcc=0;
-  function send(e,el,extra){
-    fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(Object.assign({type:e,sessionId:sid,path:location.pathname,
-      timestamp:Date.now(),siteId:S,viewport:{width:innerWidth,height:innerHeight}},
-      el?{element:el}:{},extra||{}))});
-  }
-  send("pageview");
-  document.addEventListener("click",function(e){
-    var t=e.target, id=t.id||t.className||t.tagName.toLowerCase();
-    if(id===lc){lcc++;if(lcc>=3)send("ragclick",id);}else{lc=id;lcc=1;}
-    send("click",id);
-  });
-  var maxScroll=0;
-  window.addEventListener("scroll",function(){
-    var d=document.documentElement, pct=Math.round(d.scrollTop/(d.scrollHeight-d.clientHeight||1)*100);
-    if(pct>maxScroll){maxScroll=pct;}
-  });
-  window.addEventListener("beforeunload",function(){
-    send("exit",null,{scrollDepth:maxScroll,timeOnPage:Math.round((Date.now()-t0)/1000)});
-  });
-})();
-</script>`.trim();
-}
+type Step = 1 | 2 | 3 | 4 | 5;
 
 const STEP_LABEL: Record<Step, string> = {
   1: "GitHub",
   2: "Repository",
-  3: "Snippet",
-  4: "Live",
+  3: "PostHog",
+  4: "Confirm",
+  5: "Live",
 };
+
+interface PostHogCheck {
+  eventCount: number;
+  name: string | null;
+  posthogProjectToken: string | null;
+  host: string;
+}
 
 export default function OnboardPage() {
   const [step, setStep] = useState<Step>(1);
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
   const [ghUser, setGhUser] = useState<{ login: string; avatar: string } | null>(null);
   const [repos, setRepos] = useState<Repo[]>([]);
   const [selectedRepo, setSelectedRepo] = useState("");
   const [prodUrl, setProdUrl] = useState("");
+
+  const [phHost, setPhHost] = useState("https://app.posthog.com");
+  const [phProjectId, setPhProjectId] = useState("");
+  const [phPersonalKey, setPhPersonalKey] = useState("");
+  const [phCheck, setPhCheck] = useState<PostHogCheck | null>(null);
+
   const [siteId, setSiteId] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [customerId, setCustomerId] = useState("");
+  const [requestId, setRequestId] = useState("");
 
   async function handleValidateToken() {
     setError("");
@@ -81,12 +64,48 @@ export default function OnboardPage() {
     }
   }
 
-  async function handleSave() {
+  async function handleConnectRepo() {
+    setError("");
+    if (!selectedRepo || !prodUrl) {
+      setError("Pick a repository and enter a production URL.");
+      return;
+    }
+    setStep(3);
+  }
+
+  async function handleConnectPosthog() {
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/onboard/posthog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          posthogHost: phHost,
+          posthogProjectId: phProjectId,
+          posthogPersonalApiKey: phPersonalKey,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "PostHog rejected the credentials.");
+        return;
+      }
+      setPhCheck(data);
+      setStep(4);
+    } catch {
+      setError("Couldn't reach PostHog. Check the host URL.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSaveAndTrigger() {
     setError("");
     setLoading(true);
     try {
       const [owner, repo] = selectedRepo.split("/");
-      const res = await fetch("/api/onboard/save", {
+      const saveRes = await fetch("/api/onboard/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -94,26 +113,38 @@ export default function OnboardPage() {
           githubOwner: owner,
           githubRepo: repo,
           prodUrl,
+          posthogPersonalApiKey: phPersonalKey,
+          posthogProjectId: phProjectId,
+          posthogHost: phCheck?.host ?? phHost,
+          posthogProjectToken: phCheck?.posthogProjectToken ?? null,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Failed to save");
+      const saveData = await saveRes.json();
+      if (!saveRes.ok) {
+        setError(saveData.error || "Failed to save customer.");
         return;
       }
-      setSiteId(data.siteId);
-      setStep(3);
+      setSiteId(saveData.siteId);
+      setCustomerId(saveData.customerId);
+
+      const triggerRes = await fetch("/api/onboard/trigger", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: saveData.customerId }),
+      });
+      const triggerData = await triggerRes.json();
+      if (!triggerRes.ok) {
+        setError(triggerData.error || "Saved, but couldn't trigger the agent.");
+        setStep(5);
+        return;
+      }
+      setRequestId(triggerData.requestId);
+      setStep(5);
     } catch {
-      setError("Something went wrong.");
+      setError("Something went wrong while saving.");
     } finally {
       setLoading(false);
     }
-  }
-
-  function copySnippet() {
-    navigator.clipboard.writeText(snippet(siteId));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -129,38 +160,36 @@ export default function OnboardPage() {
           </div>
           <div className="leading-tight">
             <p className="text-sm font-medium tracking-tight">autoresearch</p>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              onboarding
-            </p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">onboarding</p>
           </div>
         </div>
-        <a
-          href="/"
-          className="text-xs text-muted-foreground hover:text-foreground hover-underline"
-        >
+        <a href="/" className="text-xs text-muted-foreground hover:text-foreground hover-underline">
           Sign in →
         </a>
       </header>
 
       <section className="relative max-w-2xl mx-auto px-6 lg:px-8 pt-10 pb-16 page-stagger">
         <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3 enter">
-          step {step} of 4 · {STEP_LABEL[step]}
+          step {Math.min(step, 5)} of 5 · {STEP_LABEL[step]}
         </p>
         <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight max-w-lg leading-[1.1] enter">
           {step === 1 && "Connect a GitHub account so Devin can ship code on your behalf."}
           {step === 2 && "Tell us which repository powers your product."}
-          {step === 3 && "Drop one line of analytics into your site so we can find experiments to run."}
-          {step === 4 && "You're live. The agent takes it from here."}
+          {step === 3 && "Point the agent at your PostHog so it can find experiments to run."}
+          {step === 4 && "Review the connection. We'll trigger the first run when you confirm."}
+          {step === 5 && "You're live. Devin is on it."}
         </h1>
         <p className="mt-3 max-w-lg text-sm text-muted-foreground leading-relaxed enter">
           {step === 1 &&
-            "We never read your code or push commits without a flag-gated experiment. Tokens are stored encrypted in Insforge."}
+            "Tokens are stored encrypted in Insforge. The agent commits flag-gated variants directly to your default branch."}
           {step === 2 &&
-            "The agent will commit variants directly to your default branch. You can change the repo later."}
+            "The monitor cron polls every hour. Variants land on the branch you pick here."}
           {step === 3 &&
-            "It takes a few seconds and uses no third-party scripts. You can also use your existing PostHog stream."}
+            "We use a personal API key with the query:read scope. No client SDK, no tracking snippet — we read straight from your existing PostHog stream."}
           {step === 4 &&
-            "Once the next monitor cron has enough sessions, you'll see Devin runs and verdicts on the console."}
+            "Triggering runs the monitor once immediately so judges see something on the console without waiting for the next cron tick."}
+          {step === 5 &&
+            "The cron will keep running every hour. Watch the dashboard for new Devin sessions and verdicts."}
         </p>
 
         <ProgressRail step={step} />
@@ -183,25 +212,42 @@ export default function OnboardPage() {
               setSelectedRepo={setSelectedRepo}
               prodUrl={prodUrl}
               setProdUrl={setProdUrl}
-              loading={loading}
               error={error}
-              onSubmit={handleSave}
+              onSubmit={handleConnectRepo}
             />
           )}
           {step === 3 && (
             <Step3
-              siteId={siteId}
-              snippetText={snippet(siteId)}
-              copied={copied}
-              onCopy={copySnippet}
-              onContinue={() => setStep(4)}
+              phHost={phHost}
+              setPhHost={setPhHost}
+              phProjectId={phProjectId}
+              setPhProjectId={setPhProjectId}
+              phPersonalKey={phPersonalKey}
+              setPhPersonalKey={setPhPersonalKey}
+              loading={loading}
+              error={error}
+              onSubmit={handleConnectPosthog}
             />
           )}
-          {step === 4 && (
+          {step === 4 && phCheck && (
             <Step4
-              siteId={siteId}
+              ghUser={ghUser}
               selectedRepo={selectedRepo}
               prodUrl={prodUrl}
+              phCheck={phCheck}
+              loading={loading}
+              error={error}
+              onConfirm={handleSaveAndTrigger}
+            />
+          )}
+          {step === 5 && (
+            <Step5
+              siteId={siteId}
+              customerId={customerId}
+              requestId={requestId}
+              selectedRepo={selectedRepo}
+              prodUrl={prodUrl}
+              error={error}
             />
           )}
         </div>
@@ -212,29 +258,21 @@ export default function OnboardPage() {
 
 function ProgressRail({ step }: { step: Step }) {
   return (
-    <div className="mt-10 grid grid-cols-4 gap-2 enter">
-      {([1, 2, 3, 4] as const).map((n) => {
+    <div className="mt-10 grid grid-cols-5 gap-2 enter">
+      {([1, 2, 3, 4, 5] as const).map((n) => {
         const done = step > n;
         const active = step === n;
         return (
           <div key={n} className="space-y-1.5">
             <div
               className={`h-px w-full transition-colors ${
-                done
-                  ? "bg-foreground"
-                  : active
-                  ? "bg-foreground/65"
-                  : "bg-border"
+                done ? "bg-foreground" : active ? "bg-foreground/65" : "bg-border"
               }`}
             />
             <div className="flex items-center gap-1.5">
               <span
                 className={`size-1.5 rounded-full ${
-                  done
-                    ? "bg-foreground"
-                    : active
-                    ? "bg-success pulse-dot"
-                    : "bg-muted-foreground/40"
+                  done ? "bg-foreground" : active ? "bg-success pulse-dot" : "bg-muted-foreground/40"
                 }`}
               />
               <span
@@ -248,6 +286,80 @@ function ProgressRail({ step }: { step: Step }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function PrimaryButton({
+  loading,
+  disabled,
+  onClick,
+  children,
+  type = "button",
+}: {
+  loading?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+  type?: "button" | "submit";
+}) {
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled || loading}
+      className="w-full bg-foreground text-background py-2.5 rounded-md text-sm font-medium hover:bg-accent disabled:opacity-50 transition-colors focus-ring"
+    >
+      {loading ? (
+        <span className="inline-flex items-center justify-center gap-2">
+          <span className="size-3.5 border-2 border-background/40 border-t-background rounded-full animate-spin" />
+          Working…
+        </span>
+      ) : (
+        children
+      )}
+    </button>
+  );
+}
+
+function Field({
+  id,
+  label,
+  type,
+  value,
+  onChange,
+  placeholder,
+  mono,
+  hint,
+}: {
+  id: string;
+  label: string;
+  type: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  mono?: boolean;
+  hint?: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label
+        htmlFor={id}
+        className="block text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
+      >
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`w-full bg-background border border-border rounded-md px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 outline-none focus:border-ring focus-ring transition-colors ${
+          mono ? "font-mono" : ""
+        }`}
+      />
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -267,47 +379,33 @@ function Step1({
 }) {
   return (
     <div className="p-6 sm:p-8 space-y-5">
-      <div className="space-y-1.5">
-        <label
-          htmlFor="gh-token"
-          className="block text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
-        >
-          GitHub personal access token
-        </label>
-        <input
-          id="gh-token"
-          type="password"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && token && onSubmit()}
-          placeholder="github_pat_…"
-          className="w-full bg-background border border-border rounded-md px-3 py-2.5 text-sm font-mono text-foreground placeholder:text-muted-foreground/70 outline-none focus:border-ring focus-ring transition-colors"
-        />
-        <p className="text-xs text-muted-foreground">
-          Needs <span className="text-foreground/85">Contents</span> and{" "}
-          <span className="text-foreground/85">Pull requests</span> read &amp; write.{" "}
-          <a
-            href="https://github.com/settings/tokens?type=beta"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-foreground hover-underline"
-          >
-            Create one →
-          </a>
-        </p>
-      </div>
-      {error && (
-        <p className="text-xs text-danger" role="alert">
-          {error}
-        </p>
-      )}
-      <button
-        onClick={onSubmit}
-        disabled={!token || loading}
-        className="w-full bg-foreground text-background py-2.5 rounded-md text-sm font-medium hover:bg-accent disabled:opacity-50 transition-colors focus-ring"
-      >
-        {loading ? "Validating…" : "Connect GitHub"}
-      </button>
+      <Field
+        id="gh-token"
+        label="GitHub personal access token"
+        type="password"
+        value={token}
+        onChange={setToken}
+        placeholder="github_pat_…"
+        mono
+        hint={
+          <>
+            Needs <span className="text-foreground/85">Contents</span> and{" "}
+            <span className="text-foreground/85">Pull requests</span> read &amp; write.{" "}
+            <a
+              href="https://github.com/settings/tokens?type=beta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover-underline"
+            >
+              Create one →
+            </a>
+          </>
+        }
+      />
+      {error && <p className="text-xs text-danger">{error}</p>}
+      <PrimaryButton onClick={onSubmit} disabled={!token} loading={loading}>
+        Connect GitHub
+      </PrimaryButton>
     </div>
   );
 }
@@ -319,7 +417,6 @@ function Step2({
   setSelectedRepo,
   prodUrl,
   setProdUrl,
-  loading,
   error,
   onSubmit,
 }: {
@@ -329,7 +426,6 @@ function Step2({
   setSelectedRepo: (v: string) => void;
   prodUrl: string;
   setProdUrl: (v: string) => void;
-  loading: boolean;
   error: string;
   onSubmit: () => void;
 }) {
@@ -340,12 +436,9 @@ function Step2({
         <img src={ghUser.avatar} alt="" className="size-8 rounded-full" />
         <div className="leading-tight">
           <p className="text-sm font-medium">@{ghUser.login}</p>
-          <p className="text-[10px] uppercase tracking-[0.18em] text-success">
-            Connected
-          </p>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-success">Connected</p>
         </div>
       </div>
-
       <div className="space-y-1.5">
         <label
           htmlFor="repo"
@@ -368,104 +461,137 @@ function Step2({
           ))}
         </select>
       </div>
-
-      <div className="space-y-1.5">
-        <label
-          htmlFor="prod-url"
-          className="block text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
-        >
-          Production URL
-        </label>
-        <input
-          id="prod-url"
-          type="url"
-          value={prodUrl}
-          onChange={(e) => setProdUrl(e.target.value)}
-          placeholder="https://your-site.com"
-          className="w-full bg-background border border-border rounded-md px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 outline-none focus:border-ring focus-ring transition-colors"
-        />
-      </div>
-
-      {error && (
-        <p className="text-xs text-danger" role="alert">
-          {error}
-        </p>
-      )}
-
-      <button
-        onClick={onSubmit}
-        disabled={!selectedRepo || !prodUrl || loading}
-        className="w-full bg-foreground text-background py-2.5 rounded-md text-sm font-medium hover:bg-accent disabled:opacity-50 transition-colors focus-ring"
-      >
-        {loading ? "Saving…" : "Continue"}
-      </button>
+      <Field
+        id="prod-url"
+        label="Production URL"
+        type="url"
+        value={prodUrl}
+        onChange={setProdUrl}
+        placeholder="https://your-site.com"
+      />
+      {error && <p className="text-xs text-danger">{error}</p>}
+      <PrimaryButton onClick={onSubmit} disabled={!selectedRepo || !prodUrl}>
+        Continue
+      </PrimaryButton>
     </div>
   );
 }
 
 function Step3({
-  siteId,
-  snippetText,
-  copied,
-  onCopy,
-  onContinue,
+  phHost,
+  setPhHost,
+  phProjectId,
+  setPhProjectId,
+  phPersonalKey,
+  setPhPersonalKey,
+  loading,
+  error,
+  onSubmit,
 }: {
-  siteId: string;
-  snippetText: string;
-  copied: boolean;
-  onCopy: () => void;
-  onContinue: () => void;
+  phHost: string;
+  setPhHost: (v: string) => void;
+  phProjectId: string;
+  setPhProjectId: (v: string) => void;
+  phPersonalKey: string;
+  setPhPersonalKey: (v: string) => void;
+  loading: boolean;
+  error: string;
+  onSubmit: () => void;
 }) {
   return (
     <div className="p-6 sm:p-8 space-y-5">
-      <div className="flex items-center justify-between gap-4 text-xs">
-        <span className="text-muted-foreground">
-          Paste before <code className="font-mono text-foreground/85">&lt;/body&gt;</code> on every tracked page.
-        </span>
-        <button
-          onClick={onCopy}
-          className="text-foreground/85 hover:text-foreground hover-underline"
-        >
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
-      <pre className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-all bg-background border border-border rounded-md p-4 overflow-x-auto">
-        {snippetText}
-      </pre>
-      <div className="flex items-center justify-between gap-4 px-3.5 py-2.5 rounded-md bg-background border border-border">
-        <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Site ID
-        </span>
-        <code className="text-xs font-mono text-foreground/85 truncate">{siteId}</code>
-      </div>
-      <button
-        onClick={onContinue}
-        className="w-full bg-foreground text-background py-2.5 rounded-md text-sm font-medium hover:bg-accent transition-colors focus-ring"
+      <Field
+        id="ph-host"
+        label="PostHog host"
+        type="url"
+        value={phHost}
+        onChange={setPhHost}
+        placeholder="https://app.posthog.com"
+        hint={
+          <>
+            US Cloud is <code className="font-mono">https://us.posthog.com</code>, EU Cloud is{" "}
+            <code className="font-mono">https://eu.posthog.com</code>. Self-hosted? Drop in your URL.
+          </>
+        }
+      />
+      <Field
+        id="ph-project-id"
+        label="Project ID"
+        type="text"
+        value={phProjectId}
+        onChange={setPhProjectId}
+        placeholder="42"
+        mono
+        hint={
+          <>
+            Find it in <span className="text-foreground/85">Project settings → Project Variables</span> in PostHog.
+          </>
+        }
+      />
+      <Field
+        id="ph-key"
+        label="Personal API key"
+        type="password"
+        value={phPersonalKey}
+        onChange={setPhPersonalKey}
+        placeholder="phx_…"
+        mono
+        hint={
+          <>
+            Create one at{" "}
+            <a
+              href="https://app.posthog.com/settings/user-api-keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover-underline"
+            >
+              app.posthog.com/settings/user-api-keys
+            </a>{" "}
+            with the <code className="font-mono">query:read</code> scope. Stored encrypted in Insforge.
+          </>
+        }
+      />
+      {error && <p className="text-xs text-danger">{error}</p>}
+      <PrimaryButton
+        onClick={onSubmit}
+        disabled={!phProjectId || !phPersonalKey}
+        loading={loading}
       >
-        I've added the snippet
-      </button>
+        Test connection &amp; continue
+      </PrimaryButton>
     </div>
   );
 }
 
 function Step4({
-  siteId,
+  ghUser,
   selectedRepo,
   prodUrl,
+  phCheck,
+  loading,
+  error,
+  onConfirm,
 }: {
-  siteId: string;
+  ghUser: { login: string; avatar: string } | null;
   selectedRepo: string;
   prodUrl: string;
+  phCheck: PostHogCheck;
+  loading: boolean;
+  error: string;
+  onConfirm: () => void;
 }) {
+  const rows: [string, string][] = [
+    ["GitHub user", ghUser ? `@${ghUser.login}` : "—"],
+    ["Repository", selectedRepo],
+    ["Production URL", prodUrl],
+    ["PostHog project", phCheck.name ?? "—"],
+    ["PostHog host", phCheck.host],
+    ["Events seen (7d)", phCheck.eventCount.toLocaleString()],
+  ];
   return (
-    <div className="p-6 sm:p-8 space-y-6">
+    <div className="p-6 sm:p-8 space-y-5">
       <ul className="divide-y divide-border border border-border rounded-md overflow-hidden">
-        {[
-          ["Site ID", siteId],
-          ["Repository", selectedRepo],
-          ["Production URL", prodUrl],
-          ["Min sessions to trigger agent", "10"],
-        ].map(([label, value]) => (
+        {rows.map(([label, value]) => (
           <li
             key={label}
             className="flex items-center justify-between gap-4 px-3.5 py-3 bg-background"
@@ -473,12 +599,65 @@ function Step4({
             <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               {label}
             </span>
-            <span className="text-xs font-mono text-foreground/90 truncate max-w-[220px]">
+            <span className="text-xs font-mono text-foreground/90 truncate max-w-[260px]">
               {value}
             </span>
           </li>
         ))}
       </ul>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Confirming will save these to <code className="font-mono">customers</code> in Insforge and call
+        the Tensorlake monitor once with this customer's PostHog credentials. Subsequent runs are on the
+        hourly cron.
+      </p>
+      {error && <p className="text-xs text-danger">{error}</p>}
+      <PrimaryButton onClick={onConfirm} loading={loading}>
+        Confirm &amp; trigger first run
+      </PrimaryButton>
+    </div>
+  );
+}
+
+function Step5({
+  siteId,
+  customerId,
+  requestId,
+  selectedRepo,
+  prodUrl,
+  error,
+}: {
+  siteId: string;
+  customerId: string;
+  requestId: string;
+  selectedRepo: string;
+  prodUrl: string;
+  error: string;
+}) {
+  const rows: [string, string][] = [
+    ["Customer ID", customerId],
+    ["Site ID", siteId],
+    ["Repository", selectedRepo],
+    ["Production URL", prodUrl],
+    ["Monitor request", requestId || "queued · check the console"],
+  ];
+  return (
+    <div className="p-6 sm:p-8 space-y-6">
+      <ul className="divide-y divide-border border border-border rounded-md overflow-hidden">
+        {rows.map(([label, value]) => (
+          <li
+            key={label}
+            className="flex items-center justify-between gap-4 px-3.5 py-3 bg-background"
+          >
+            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              {label}
+            </span>
+            <span className="text-xs font-mono text-foreground/90 truncate max-w-[260px]">
+              {value}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {error && <p className="text-xs text-danger">{error}</p>}
       <a
         href="/dashboard"
         className="block w-full bg-foreground text-background text-center py-2.5 rounded-md text-sm font-medium hover:bg-accent transition-colors focus-ring"
