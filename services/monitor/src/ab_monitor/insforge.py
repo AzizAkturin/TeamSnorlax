@@ -38,10 +38,13 @@ def list_active_experiments(config: Settings) -> list[dict[str, Any]]:
     return list(response.json() or [])
 
 
-def list_seen_fingerprints(config: Settings) -> set[str]:
+def list_seen_fingerprints(config: Settings, customer_id: str | None = None) -> set[str]:
+    params: dict[str, str] = {"select": "opportunity_fingerprint"}
+    if customer_id:
+        params["customer_id"] = f"eq.{customer_id}"
     response = httpx.get(
         _records_url(config, EXPERIMENTS_TABLE),
-        params={"select": "opportunity_fingerprint"},
+        params=params,
         headers=_headers(config),
         timeout=30,
     )

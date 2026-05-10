@@ -148,7 +148,15 @@ def _build_session_prompt(
         "- The variant must be reachable only when the flag is true; the control branch must keep its existing behaviour.\n"
         "- No TODOs, no commented-out code, no placeholder copy, no console.logs, no dead code paths.\n"
         "- Do not change unrelated files, configs, or formatting.\n"
-        "- No filler text, no greetings, no summaries in the commit body."
+        "- No filler text, no greetings, no summaries in the commit body.\n"
+        "\n"
+        "## Substitution policy\n"
+        "If the exact path or element from the analytics does not exist in the repo, do not pause for input. "
+        "Pick the closest real surface that the data could plausibly describe (e.g. the highest-friction CTA on the landing page, "
+        "or the closest semantically-related component) and continue. Note the substitution as the first bullet in the commit "
+        "body, e.g. `- substituted address-field → footer-cta-start-free (closest real CTA)`. "
+        "If `posthog-js` is not yet a dependency in the repo, add it and wire `<PostHogProvider>` in the root layout — that "
+        "counts as one of your changes."
     )
 
 

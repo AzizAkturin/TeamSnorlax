@@ -56,10 +56,55 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../app/onboard/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/onboard">> = Specific
+  const handler = {} as typeof import("../../../app/onboard/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../app/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/">> = Specific
   const handler = {} as typeof import("../../../app/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/api/onboard/posthog/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/onboard/posthog">> = Specific
+  const handler = {} as typeof import("../../../app/api/onboard/posthog/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/api/onboard/save/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/onboard/save">> = Specific
+  const handler = {} as typeof import("../../../app/api/onboard/save/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/api/onboard/trigger/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/onboard/trigger">> = Specific
+  const handler = {} as typeof import("../../../app/api/onboard/trigger/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/api/onboard/validate/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/onboard/validate">> = Specific
+  const handler = {} as typeof import("../../../app/api/onboard/validate/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
