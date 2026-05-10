@@ -21,7 +21,7 @@ const features = [
 
 export default function FeatureCards() {
   return (
-    <section id="features" className="px-8 pt-6 pb-16 bg-gray-50 scroll-mt-20">
+    <section id="features" className="px-8 pt-2 pb-16 bg-gray-50 scroll-mt-20">
       <div className="max-w-5xl mx-auto">
         <p className="text-xs font-semibold tracking-widest uppercase text-amber-600 text-center mb-3">
           Why teams choose Meridian
