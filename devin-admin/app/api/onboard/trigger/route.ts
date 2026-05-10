@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
     headers: {
       Authorization: `Bearer ${TENSORLAKE_KEY}`,
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify(monitorPayload),
   });
