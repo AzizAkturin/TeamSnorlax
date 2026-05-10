@@ -1,6 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+interface ExperimentInfo {
+  spec_id: string;
+  status: string;
+  flag_key: string | null;
+  hypothesis: string | null;
+  variant_name: string | null;
+  primary_metric: string | null;
+  confidence: number | null;
+  relative_lift: number | null;
+  decided_at: string | null;
+}
 
 interface Session {
   session_id: string;
@@ -14,49 +26,20 @@ interface Session {
   drop_off_path: string | null;
   sessions_analyzed: number | null;
   avg_time_on_page_seconds: number | null;
+  experiment: ExperimentInfo | null;
 }
 
-const PLACEHOLDER_SESSIONS: Session[] = [
-  {
-    session_id: "ses_4a8f2c1d9e3b7a6f",
-    status: "running",
-    url: "https://app.devin.ai/sessions/ses_4a8f2c1d9e3b7a6f",
-    title: "Reduce rage clicks on checkout CTA by increasing button size and contrast ratio",
-    created_at: new Date(Date.now() - 18 * 60000).toISOString(),
-    pr_number: null,
-    pr_url: null,
-    top_rage_click: "#checkout-submit-btn",
-    drop_off_path: null,
-    sessions_analyzed: 312,
-    avg_time_on_page_seconds: 47,
-  },
-  {
-    session_id: "ses_9b2e5f8c3d1a4e7b",
-    status: "blocked",
-    url: "https://app.devin.ai/sessions/ses_9b2e5f8c3d1a4e7b",
-    title: "Improve scroll depth on /pricing by moving social proof above the fold",
-    created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-    pr_number: null,
-    pr_url: null,
-    top_rage_click: null,
-    drop_off_path: "/pricing",
-    sessions_analyzed: 198,
-    avg_time_on_page_seconds: 22,
-  },
-  {
-    session_id: "ses_1c7d3a9e6f2b8c4d",
-    status: "completed",
-    url: "https://app.devin.ai/sessions/ses_1c7d3a9e6f2b8c4d",
-    title: "Shorten copy on hero section — users exiting within 5s at 61% rate",
-    created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
-    pr_number: 42,
-    pr_url: "https://github.com/AzizAkturin/TeamSnorlax/pull/42",
-    top_rage_click: null,
-    drop_off_path: "/",
-    sessions_analyzed: 541,
-    avg_time_on_page_seconds: 8,
-  },
-];
+interface ApiResponse {
+  sessions: Session[];
+  all: Session[];
+  counts: {
+    total: number;
+    active: number;
+    experiments: number;
+    shipped: number;
+    killed: number;
+  };
+}
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; badge: string }> = {
   running: { label: "Running", dot: "bg-emerald-500 animate-pulse", badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
@@ -64,6 +47,14 @@ const STATUS_CONFIG: Record<string, { label: string; dot: string; badge: string 
   paused: { label: "Paused", dot: "bg-gray-400", badge: "bg-gray-50 text-gray-600 border-gray-200" },
   stopped: { label: "Stopped", dot: "bg-red-400", badge: "bg-red-50 text-red-600 border-red-200" },
   completed: { label: "Completed", dot: "bg-blue-400", badge: "bg-blue-50 text-blue-700 border-blue-200" },
+  logged: { label: "Logged", dot: "bg-gray-300", badge: "bg-gray-50 text-gray-500 border-gray-200" },
+  unknown: { label: "Unknown", dot: "bg-gray-300", badge: "bg-gray-50 text-gray-500 border-gray-200" },
+};
+
+const EXP_STATUS_CONFIG: Record<string, { label: string; badge: string }> = {
+  active: { label: "Experiment running", badge: "bg-blue-50 text-blue-700 border-blue-200" },
+  shipped: { label: "Shipped", badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  killed: { label: "Killed", badge: "bg-rose-50 text-rose-700 border-rose-200" },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -71,6 +62,16 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${cfg.badge}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+}
+
+function ExperimentBadge({ status }: { status: string }) {
+  const cfg = EXP_STATUS_CONFIG[status];
+  if (!cfg) return null;
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${cfg.badge}`}>
       {cfg.label}
     </span>
   );
@@ -86,13 +87,26 @@ function elapsed(iso: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+function formatPercent(value: number | null | undefined, digits = 1) {
+  if (value == null || Number.isNaN(value)) return "—";
+  return `${(value * 100).toFixed(digits)}%`;
+}
+
+function StatTile({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl bg-gray-50 p-3.5">
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">{label}</p>
+      <p className="text-sm font-medium text-gray-900">{value}</p>
+    </div>
+  );
+}
+
 function SessionCard({ session }: { session: Session }) {
+  const exp = session.experiment;
   const element = session.top_rage_click ?? session.drop_off_path;
   const triggerParts: string[] = [];
-  if (session.sessions_analyzed != null)
-    triggerParts.push(`${session.sessions_analyzed} sessions`);
-  if (session.avg_time_on_page_seconds != null)
-    triggerParts.push(`avg ${session.avg_time_on_page_seconds}s on page`);
+  if (session.sessions_analyzed != null) triggerParts.push(`${session.sessions_analyzed} sessions`);
+  if (session.avg_time_on_page_seconds != null) triggerParts.push(`avg ${session.avg_time_on_page_seconds}s on page`);
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-5 hover:border-gray-300 transition-colors">
@@ -100,6 +114,7 @@ function SessionCard({ session }: { session: Session }) {
         <div className="space-y-1.5 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <StatusBadge status={session.status} />
+            {exp && <ExperimentBadge status={exp.status} />}
             <span className="text-xs text-gray-400">{elapsed(session.created_at)}</span>
           </div>
           <p className="text-xs font-mono text-gray-400 truncate">{session.session_id}</p>
@@ -112,7 +127,7 @@ function SessionCard({ session }: { session: Session }) {
               rel="noopener noreferrer"
               className="text-xs font-medium text-blue-600 hover:underline"
             >
-              PR #{session.pr_number}
+              {session.pr_number ? `PR #${session.pr_number}` : "PR"}
             </a>
           )}
           <a
@@ -130,39 +145,77 @@ function SessionCard({ session }: { session: Session }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-gray-50 p-3.5">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">UI Element</p>
-          <p className="text-sm font-medium text-gray-900 truncate">
-            {element ?? <span className="text-gray-400 font-normal italic">Not specified</span>}
-          </p>
-        </div>
-        <div className="rounded-xl bg-gray-50 p-3.5">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">Trigger data</p>
-          <p className="text-sm font-medium text-gray-900">
-            {triggerParts.length > 0
-              ? triggerParts.join(" · ")
-              : <span className="text-gray-400 font-normal italic">—</span>}
-          </p>
-        </div>
+        <StatTile label="UI Element" value={element ?? "—"} />
+        <StatTile label="Trigger data" value={triggerParts.length > 0 ? triggerParts.join(" · ") : "—"} />
       </div>
 
-      {session.title && (
+      {exp && (
+        <div className="grid grid-cols-3 gap-3">
+          <StatTile label="Flag" value={exp.flag_key ?? "—"} />
+          <StatTile label="Confidence" value={formatPercent(exp.confidence)} />
+          <StatTile label="Lift" value={formatPercent(exp.relative_lift)} />
+        </div>
+      )}
+
+      {(session.title || exp?.hypothesis) && (
         <div className="rounded-xl bg-gray-900 px-4 py-3">
           <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Hypothesis</p>
-          <p className="text-sm text-gray-100 leading-snug">{session.title}</p>
+          <p className="text-sm text-gray-100 leading-snug">{exp?.hypothesis ?? session.title}</p>
         </div>
       )}
     </div>
   );
 }
 
-export default function SessionsDashboard() {
-  const [tab, setTab] = useState<"active" | "all">("active");
-
-  const activeSessions = PLACEHOLDER_SESSIONS.filter(
-    (s) => s.status === "running" || s.status === "blocked" || s.status === "paused"
+function HeaderStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="text-right">
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{label}</p>
+      <p className="text-sm font-semibold text-gray-900 tabular-nums">{value}</p>
+    </div>
   );
-  const displayed = tab === "active" ? activeSessions : PLACEHOLDER_SESSIONS;
+}
+
+export default function SessionsDashboard() {
+  const [tab, setTab] = useState<"active" | "all" | "experiments">("active");
+  const [data, setData] = useState<ApiResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const r = await fetch("/api/sessions", { cache: "no-store" });
+        if (!r.ok) throw new Error(`API ${r.status}`);
+        const json = (await r.json()) as ApiResponse;
+        if (!cancelled) {
+          setData(json);
+          setError(null);
+        }
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    const id = setInterval(load, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  const sessions = data?.all ?? [];
+  const counts = data?.counts ?? { total: 0, active: 0, experiments: 0, shipped: 0, killed: 0 };
+
+  const visible = useMemo(() => {
+    if (tab === "active")
+      return sessions.filter((s) => ["running", "blocked", "paused"].includes(s.status));
+    if (tab === "experiments") return sessions.filter((s) => s.experiment);
+    return sessions;
+  }, [tab, sessions]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -174,44 +227,51 @@ export default function SessionsDashboard() {
               <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="white" strokeWidth="2" />
             </svg>
           </div>
-          <h1 className="text-sm font-semibold text-gray-900">Devin Admin</h1>
+          <h1 className="text-sm font-semibold text-gray-900">Autoresearch · Devin</h1>
         </div>
-        <button
-          className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors"
-          onClick={() => window.location.href = "/"}
-        >
-          Sign out
-        </button>
+        <div className="flex items-center gap-6">
+          <HeaderStat label="Active" value={counts.active} />
+          <HeaderStat label="Experiments" value={counts.experiments} />
+          <HeaderStat label="Shipped" value={counts.shipped} />
+          <HeaderStat label="Killed" value={counts.killed} />
+        </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-8 py-8 space-y-6">
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-          {(["active", "all"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                tab === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {t === "active" ? "Active" : "All sessions"}
-              {t === "active" && activeSessions.length > 0 && (
-                <span className="ml-2 bg-emerald-500 text-white text-xs rounded-full px-1.5 py-0.5 font-semibold">
-                  {activeSessions.length}
-                </span>
-              )}
-              {t === "all" && (
-                <span className="ml-2 text-gray-400 text-xs">{PLACEHOLDER_SESSIONS.length}</span>
-              )}
-            </button>
-          ))}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+            {(["active", "experiments", "all"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  tab === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {t === "active" ? "Active" : t === "experiments" ? "Experiments" : "All sessions"}
+              </button>
+            ))}
+          </div>
+          {loading && <span className="text-xs text-gray-400">Loading…</span>}
+          {error && <span className="text-xs text-rose-600">{error}</span>}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {displayed.map((s) => (
-            <SessionCard key={s.session_id} session={s} />
-          ))}
-        </div>
+        {visible.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
+            <p className="text-sm font-medium text-gray-900">No sessions to show</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {loading
+                ? "Fetching from Devin and Insforge…"
+                : "Once the monitor cron fires, runs will appear here."}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {visible.map((s) => (
+              <SessionCard key={s.session_id} session={s} />
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
