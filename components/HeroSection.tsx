@@ -8,10 +8,10 @@ export default function HeroSection() {
         Now in public beta
       </span>
       <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 max-w-3xl leading-tight">
-        The analytics platform your team will actually use
+        Ship dashboards in minutes, not weeks.
       </h1>
       <p className="mt-4 text-lg text-gray-500 max-w-xl">
-        Meridian connects your data sources, surfaces insights automatically, and gets out of your way so you can make faster decisions.
+        Meridian connects your data sources and surfaces anomalies automatically — so your team makes decisions in hours, not sprints.
       </p>
       <div
         className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-500"
@@ -43,7 +43,7 @@ export default function HeroSection() {
           className="inline-flex items-center justify-center gap-2 border border-gray-300 bg-white text-gray-800 px-7 py-3.5 rounded-lg text-base font-semibold shadow-sm hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:bg-gray-100 active:translate-y-px active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 transition-all"
           data-ph-id="hero-see-features"
         >
-          See features <span aria-hidden>↓</span>
+          See how it works <span aria-hidden>↓</span>
         </Link>
       </div>
       <p className="mt-3 text-xs text-gray-400">

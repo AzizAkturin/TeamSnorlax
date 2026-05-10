@@ -1,9 +1,9 @@
 const features = [
   {
     icon: "◈",
-    title: "Unified data sources",
+    title: "Connect 40+ sources in minutes",
     description:
-      "Connect Postgres, Snowflake, BigQuery, and 40+ other sources in minutes. No ETL pipelines, no data copies.",
+      "Plug in Postgres, Snowflake, BigQuery, and the rest of your stack without ETL pipelines or data copies.",
   },
   {
     icon: "⟐",
